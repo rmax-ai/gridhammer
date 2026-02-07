@@ -50,7 +50,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Establish protocol truth and determinism.
 
-1. **Rust crate bootstrapping**
+1. **Rust crate bootstrapping (Done)**
 
    * Create `gridhammer-core`
    * Enforce:
