@@ -8,6 +8,26 @@
 
 ---
 
+## CI
+
+Run these commands to verify the build:
+
+### Rust Core
+```bash
+cargo fmt -- --check
+cargo clippy -- -D warnings
+cargo test
+```
+
+### TypeScript Shell
+```bash
+cd ts-shell
+npm test
+npm run lint
+```
+
+---
+
 ## Running a scenario
 
 ```
