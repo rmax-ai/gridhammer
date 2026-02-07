@@ -87,7 +87,7 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 2 — ChargingProfile executor (critical path) (now)
+## Phase 2 — ChargingProfile executor (critical path) (Done)
 
 **Goal:** Build the heart of GridHammer.
 
@@ -109,7 +109,7 @@ Do not parallelize across layers prematurely.
    * No silent clamping
    * No negative or NaN values
 
-4. **Property tests**
+4. **Property tests (Done)**
 
    * Overlapping profiles
    * Profile churn
@@ -122,7 +122,7 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 3 — Site constraints & projection
+## Phase 3 — Site constraints & projection (now)
 
 **Goal:** Simulate grid pressure without simulating physics.
 

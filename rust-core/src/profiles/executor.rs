@@ -432,4 +432,170 @@ mod tests {
         );
         Executor::resolve(vec![profile], current_time, None, None);
     }
+
+    #[test]
+    fn test_overlapping_profiles_priority() {
+        let current_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
+        // Lower stack level
+        let p1 = create_profile(
+            1,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 1000.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+        // Higher stack level
+        let p2 = create_profile(
+            2,
+            2,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 2000.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+        // Same stack level as p2, but higher ID
+        let p3 = create_profile(
+            3,
+            2,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 3000.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+
+        // p2 beats p1 (stack level)
+        let result = Executor::resolve(vec![p1.clone(), p2.clone()], current_time, None, None);
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 2000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 2
+            })
+        );
+
+        // p3 beats p2 (same stack level, higher ID)
+        let result = Executor::resolve(vec![p2.clone(), p3.clone()], current_time, None, None);
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 3000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 3
+            })
+        );
+    }
+
+    #[test]
+    fn test_profile_churn() {
+        // Simulate time passing and profiles expiring/activating
+        let start_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
+
+        let mut p1 = create_profile(
+            1,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 1000.0,
+                number_phases: None,
+            }],
+            Some(start_time),
+            ChargingRateUnit::Watts,
+        );
+        p1.valid_to = Some(start_time + Duration::minutes(30));
+
+        let mut p2 = create_profile(
+            2,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 2000.0,
+                number_phases: None,
+            }],
+            Some(start_time),
+            ChargingRateUnit::Watts,
+        );
+        p2.valid_from = Some(start_time + Duration::minutes(30));
+
+        let profiles = vec![p1, p2];
+
+        // At T=0, p1 is active
+        let res1 = Executor::resolve(profiles.clone(), start_time, None, None);
+        assert_eq!(res1.unwrap().source_profile_id, 1);
+
+        // At T=29, p1 is still active
+        let res2 = Executor::resolve(
+            profiles.clone(),
+            start_time + Duration::minutes(29),
+            None,
+            None,
+        );
+        assert_eq!(res2.unwrap().source_profile_id, 1);
+
+        // At T=30, p1 expires (inclusive) but p2 activates (inclusive). p2.id > p1.id, so p2 wins.
+        let res3 = Executor::resolve(
+            profiles.clone(),
+            start_time + Duration::minutes(30),
+            None,
+            None,
+        );
+        assert_eq!(res3.unwrap().source_profile_id, 2);
+
+        // At T=31, p1 is definitely invalid
+        let res4 = Executor::resolve(
+            profiles.clone(),
+            start_time + Duration::minutes(31),
+            None,
+            None,
+        );
+        assert_eq!(res4.unwrap().source_profile_id, 2);
+    }
+
+    #[test]
+    fn test_zero_power_suspend() {
+        let current_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
+        let p1 = create_profile(
+            1,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 0.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+
+        let result = Executor::resolve(vec![p1], current_time, None, None);
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 0.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 1
+            })
+        );
+    }
 }
