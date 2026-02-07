@@ -37,7 +37,7 @@ Do not parallelize across layers prematurely.
 
    No implementation yet.
 
-3. **Add forbidden-scope checklist (Done)**
+3. **Add forbidden-scope checklist (Done, Verified)**
 
    * CPMS runtime logic
    * Pricing / OCPI
