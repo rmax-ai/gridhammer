@@ -2,56 +2,108 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "github-copilot/gemini-3-flash-preview",
   "default_agent": "orchestrator",
+
   "permission": {
     "read": "allow",
     "write": "allow",
     "execute": "allow",
     "bash": "allow"
   },
+
   "agent": {
-    "oracle-sisyphus": {
-      "model": "github-copilot/gemini-3-pro-preview"
-    },
+    /* -----------------------------
+       Core coordination
+       ----------------------------- */
+
     "orchestrator": {
-      "model": "github-copilot/gemini-3-pro-preview"
+      "model": "github-copilot/gemini-3-pro-preview",
+      "description": "Owns system-level planning, task decomposition, and cross-language coordination (Rust core ↔ TypeScript shell). Enforces architecture and sequencing."
     },
-    "implement": {
-      "model": "github-copilot/grok-code-fast-1"
-    },
-    "terminal": {
-      "model": "github-copilot/grok-code-fast-1"
-    },
-    "review": {
-      "model": "github-copilot/grok-code-fast-1"
-    },
-    "test": {
-      "model": "github-copilot/grok-code-fast-1"
+
+    "oracle-sisyphus": {
+      "model": "github-copilot/gemini-3-pro-preview",
+      "description": "Adversarial reviewer. Challenges assumptions, hunts for protocol gaps, determinism leaks, and hidden nondeterminism."
     },
 
     /* -----------------------------
-       GridPulse CPMS Agents (new)
+       Rust core agents (authoritative)
        ----------------------------- */
 
-    "gateway-agent": {
-      "model": "github-copilot/grok-code-fast-1"
+    "rust-core-agent": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Implements Rust simulation kernel, EVSE FSMs, ChargingProfile executor, site projection, and invariants. No UI or CLI concerns."
     },
-    "session-agent": {
-      "model": "github-copilot/grok-code-fast-1"
+
+    "ocpp-agent": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Implements strict OCPP 2.1 message models, validation, and protocol semantics. Guards against spec drift and shortcuts."
     },
+
+    "fsm-agent": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Designs and audits EVSE finite state machines. Ensures exhaustive transitions and illegal-state prevention."
+    },
+
+    "invariants-agent": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Defines and enforces protocol and simulation invariants. Produces assertion logic and violation reports."
+    },
+
+    /* -----------------------------
+       Scenario & load modeling
+       ----------------------------- */
+
+    "scenario-agent": {
+      "model": "github-copilot/gemini-3-flash-preview",
+      "description": "Designs declarative scenario schemas (YAML/JSON). Focuses on site topology, arrivals, power requests, and fault injection."
+    },
+
+    "load-agent": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Models MCS load patterns, ramp rates, contention, and site-level constraints. No protocol logic."
+    },
+
+    /* -----------------------------
+       TypeScript shell agents
+       ----------------------------- */
+
+    "cli-agent": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Implements the GridHammer CLI (run, replay, sweep, validate). Strictly orchestration, no simulation semantics."
+    },
+
     "registry-agent": {
-      "model": "github-copilot/grok-code-fast-1"
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Manages experiment registry, run metadata, scenario hashes, and artifact indexing."
     },
-    "pricing-agent": {
-      "model": "github-copilot/grok-code-fast-1"
+
+    "ui-agent": {
+      "model": "github-copilot/gemini-3-flash-preview",
+      "description": "Builds read-only web UI for visualization and diffing of runs. Consumes artifacts only."
     },
-    "ocpi-agent": {
-      "model": "github-copilot/grok-code-fast-1"
+
+    /* -----------------------------
+       Quality & safety
+       ----------------------------- */
+
+    "review": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Performs code and design reviews against ARCHITECTURE.md and DECISIONS.md. Flags violations."
     },
-    "shared-agent": {
-      "model": "github-copilot/gemini-3-flash-preview"
+
+    "test": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Writes unit, property, and replay tests. Focus on determinism and invariant coverage."
     },
+
+    "terminal": {
+      "model": "github-copilot/grok-code-fast-1",
+      "description": "Executes commands, runs simulations, manages builds and tests. No design decisions."
+    },
+
     "steward-agent": {
-      "model": "github-copilot/gemini-3-pro-preview"
+      "model": "github-copilot/gemini-3-pro-preview",
+      "description": "Governance agent. Ensures scope discipline, prevents feature creep, and enforces non-goals."
     }
   }
 }
