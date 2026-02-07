@@ -45,7 +45,7 @@ If any design choice conflicts with these goals, **reject it**.
 * Real power electronics
 * UI-defined behavior
 * Non-deterministic simulations
-* CPMS runtime logic (pricing, billing, invoicing, user ledgers)
+* CPMS runtime logic (pricing, billing, invoicing, user ledgers, roaming settlement)
 * OCPI / Roaming logic
 * Smart Gateway logic (smoothing, hidden retries)
 

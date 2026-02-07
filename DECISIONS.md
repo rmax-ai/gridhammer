@@ -94,7 +94,7 @@ Do not simulate EV internals or grid physics.
 * Physics adds noise, not signal
 
 **Consequence**
-Power behavior is abstract but consistent.
+Power behavior is abstract but consistent. No `physics-agent`.
 
 ---
 
@@ -124,7 +124,7 @@ GridHammer expressly forbids implementation of CPMS business logic (pricing, bil
 * Focus must remain on protocol stress.
 
 **Consequence**
-Agents like `pricing-agent` or `billing-agent` are permanently out of scope.
+Agents like `pricing-agent`, `billing-agent`, `invoicing-agent`, `ledger-agent`, `user-agent`, and `settlement-agent` are permanently out of scope.
 
 ---
 
@@ -138,7 +138,7 @@ GridHammer will not implement OCPI, OCHP, OICP, or any roaming settlement protoc
 * Roaming complexity belongs in the CSMS or a dedicated roaming simulator.
 
 **Consequence**
-No `ocpi-agent`.
+No `ocpi-agent` or `roaming-agent`.
 
 ---
 
@@ -152,7 +152,7 @@ The Gateway layer must be a dumb pipe. No message buffering (beyond TCP/WebSocke
 * We want to expose failures, not mask them.
 
 **Consequence**
-Network errors propagate immediately to the core FSM.
+Network errors propagate immediately to the core FSM. No `smart-gateway-agent`.
 
 ---
 
