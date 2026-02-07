@@ -189,7 +189,7 @@ Do not parallelize across layers prematurely.
 
    **Goal:** Operate GridHammer without touching core logic.
 
-   1. **Scenario schema (now)**
+   1. **Scenario schema (Done)**
 
       * YAML/JSON
       * Versioned

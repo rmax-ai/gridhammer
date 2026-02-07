@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "echo \"No tests yet\" && exit 0",
+    "test": "vitest",
     "lint": "echo \"No lint yet\" && exit 0"
   },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
   }
 }
