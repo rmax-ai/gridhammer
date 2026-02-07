@@ -60,7 +60,7 @@ pub fn check_constraints(
             let load_entry = feeder_loads.entry(feeder.id.clone()).or_insert(0.0);
             *load_entry += load;
 
-            let evse_entry = feeder_evses.entry(feeder.id.clone()).or_insert(Vec::new());
+            let evse_entry = feeder_evses.entry(feeder.id.clone()).or_default();
             evse_entry.push(evse_id);
         }
     }
