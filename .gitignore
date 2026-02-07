@@ -27,6 +27,13 @@ services/registry/registry
 services/session/session
 services/ocpi/ocpi
 
+# --- Rust ---
+# Build artifacts
+target/
+
+# Rustfmt / editor backup files
+**/*.rs.bk
+
 # Test output
 coverage.txt
 profile.out
@@ -45,6 +52,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Tool caches
+.eslintcache
+.stylelintcache
+.swc/
+.turbo/
 
 # Build outputs
 dist/
@@ -93,4 +109,5 @@ assertions.json
 artifacts/
 runs/
 
+# (already ignored above)
 /target/
