@@ -67,7 +67,7 @@ Do not parallelize across layers prematurely.
    * Add compile-time exhaustiveness checks
    * No ChargingProfiles yet
 
-3. **TransactionEvent lifecycle**
+3. **TransactionEvent lifecycle (Done)**
 
    * Implement Started / Updated / Ended
    * Encode invariant checks:
