@@ -114,7 +114,7 @@ Forbidden:
 
 ---
 
-## Non-goals (Forbidden Scope)
+## Forbidden Domain Scope (Non-goals)
 
 The following areas are **permanently out of scope**:
 

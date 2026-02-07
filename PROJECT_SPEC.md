@@ -309,7 +309,7 @@ This must be enforced in tooling.
 
 ---
 
-## 7. Forbidden Scope (Checklist)
+## 7. Forbidden Domain Scope (Checklist)
 
 This section enumerates behavior that is explicitly **out of scope**. Any attempt to implement these features must be rejected.
 
