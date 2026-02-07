@@ -111,7 +111,6 @@ fn evaluate_profile(
 mod tests {
     use super::super::model::ChargingSchedulePeriod;
     use super::*;
-    use super::*;
     use chrono::TimeZone;
 
     fn create_profile(
