@@ -124,3 +124,18 @@ Never trust visualizations without trace confirmation.
 * Editing scenario after execution
 * Trusting UI over traces
 
+---
+
+## Scope Safety
+
+GridHammer is a **protocol stress tool**, not a CPMS implementation.
+
+**Do not:**
+* Attempt to simulate pricing engines or billing logic.
+* Implement OCPI roaming behavior.
+* Add user ledger or smart-charging logic to the simulation.
+* Expect "smart" gateway retries (GridHammer fails fast).
+
+If you need these features, you are looking for a CPMS, not GridHammer.
+
+

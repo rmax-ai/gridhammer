@@ -79,7 +79,7 @@ Artifacts are immutable.
 * No implicit defaults
 * No hidden state
 * No UI-defined logic
-* No CPMS runtime logic
+* No CPMS runtime logic (pricing, billing, OCPI, ledgers)
 
 ---
 
