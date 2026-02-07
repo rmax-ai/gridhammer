@@ -14,7 +14,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make it impossible to build the wrong thing.
 
-1. **Freeze contracts (Done)**
+1. **Freeze contracts (Done, Verified)**
 
    * Finalize:
 
