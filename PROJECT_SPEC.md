@@ -316,10 +316,11 @@ This section enumerates behavior that is explicitly **out of scope**. Any attemp
 *   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
 *   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
 *   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
+*   **Physics**: No battery chemistry, real power electronics, or grid physics.
 *   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
 
+Reject any task that implies:
 
-* UI-driven behavior
 * Protocol shortcuts
 * Hidden timing bugs
 * “Works on my machine” simulations
