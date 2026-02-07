@@ -29,7 +29,7 @@ Authoritative references:
   7. Relevant OCPP spec sections under `docs/spec/OCPP-2.1/`
 * **Ownership Enforcement**:
 
-  * Identify the owning agent (gateway/session/registry/pricing/ocpi/shared) and keep edits inside its path per `AGENTS.md`.
+  * Identify the owning agent (gateway/session/registry/shared) and keep edits inside its path per `AGENTS.md`.
   * Do not mix responsibilities between Rust core (protocol semantics) and TypeScript shell (control plane).
 * **Test Verification Loop**:
 

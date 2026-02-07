@@ -3,7 +3,6 @@ members = [
     "services/gateway",
     "services/session",
     "services/registry",
-    "services/pricing",
-    "services/ocpi", "rust-core",
+    "rust-core",
 ]
 resolver = "2"

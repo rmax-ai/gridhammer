@@ -22,10 +22,8 @@ bin/
 *.test
 *.prof
 services/gateway/gateway
-services/pricing/pricing
 services/registry/registry
 services/session/session
-services/ocpi/ocpi
 
 # --- Rust ---
 # Build artifacts
