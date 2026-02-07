@@ -135,6 +135,7 @@ GridHammer is a **protocol stress tool**, not a CPMS implementation.
 *   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
 *   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
 *   **Physics**: No battery chemistry, real power electronics, or grid physics.
+*   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
 
 If you need these features, you are looking for a CPMS, not GridHammer.
 

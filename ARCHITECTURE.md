@@ -114,12 +114,14 @@ Forbidden:
 
 ---
 
-## Non-goals
+## Non-goals (Forbidden Scope)
 
-* ISO-15118 PLC timing
-* Battery chemistry
-* Real power electronics
-* CPMS runtime logic (pricing, billing, invoicing, user ledgers, roaming settlement)
-* OCPI / Roaming logic (OCHP, OICP)
-* Smart Gateway logic (retry smoothing, connection holding, message buffering)
+The following areas are **permanently out of scope**:
+
+*   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
+*   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
+*   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
+*   **Physics**: No battery chemistry, real power electronics, or grid physics.
+*   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation.
+*   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
 
