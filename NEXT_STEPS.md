@@ -172,28 +172,29 @@ Do not parallelize across layers prematurely.
    * State-dependent legality
    * Message ordering invariants
 
-3. **Trace output (now)**
+   3. **Trace output (Done)**
 
-   * `ocpp_trace.jsonl`
-   * Stable ordering
-   * Stable timestamps (tick-based)
+      * `ocpp_trace.jsonl`
+      * Stable ordering
+      * Stable timestamps (tick-based)
 
-**Exit criteria**
+   **Exit criteria**
 
-* Traces replay identically
-* Invalid sequences are rejected loudly
+   * Traces replay identically
+   * Invalid sequences are rejected loudly
 
----
+   ---
 
-## Phase 5 — TypeScript shell (control plane)
+   ## Phase 5 — TypeScript shell (control plane)
 
-**Goal:** Operate GridHammer without touching core logic.
+   **Goal:** Operate GridHammer without touching core logic.
 
-1. **Scenario schema**
+   1. **Scenario schema (now)**
 
-   * YAML/JSON
-   * Versioned
-   * Validated via Zod
+      * YAML/JSON
+      * Versioned
+      * Validated via Zod
+
 
 2. **CLI v0**
 
