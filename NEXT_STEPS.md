@@ -97,7 +97,7 @@ Do not parallelize across layers prematurely.
    * StationMaxProfile
    * Time-based resolution
 
-2. **Conflict resolution rules**
+2. **Conflict resolution rules (Done)**
 
    * Explicit priority order
    * Deterministic tie-breaking
