@@ -46,7 +46,7 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 1 — Rust core foundation (authoritative) (now)
+## Phase 1 — Rust core foundation (authoritative) (Done)
 
 **Goal:** Establish protocol truth and determinism.
 
@@ -75,7 +75,7 @@ Do not parallelize across layers prematurely.
      * no orphan transactions
      * no double-ended transactions
 
-4. **Artifact emission (minimal)**
+4. **Artifact emission (minimal) (Done)**
 
    * `evse_states.jsonl`
    * Deterministic ordering
@@ -87,7 +87,7 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 2 — ChargingProfile executor (critical path)
+## Phase 2 — ChargingProfile executor (critical path) (now)
 
 **Goal:** Build the heart of GridHammer.
 

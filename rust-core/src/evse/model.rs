@@ -1,8 +1,9 @@
 use super::fsm::transition;
 use super::state::{EvseEvent, EvseState};
 use super::transaction::TransactionManager;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Evse {
     pub id: u32,
     pub state: EvseState,

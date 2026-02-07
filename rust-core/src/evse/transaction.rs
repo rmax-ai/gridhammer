@@ -1,13 +1,13 @@
-// use crate::ocpp::messages::{TransactionEventEnum, TriggerReasonEnum};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActiveTransaction {
     pub transaction_id: String,
     pub seq_no: i32,
     pub start_timestamp: i64, // Sim tick
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct TransactionManager {
     pub current_transaction: Option<ActiveTransaction>,
 }
