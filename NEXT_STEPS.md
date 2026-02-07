@@ -14,7 +14,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make it impossible to build the wrong thing.
 
-1. **Freeze contracts (Done)**
+1. **Freeze contracts (Done, Verified clean 2026-02-07)**
 
    * Finalize:
 
@@ -24,7 +24,7 @@ Do not parallelize across layers prematurely.
      * `MANIFEST.md`
    * Steward-agent reviews for internal consistency.
    * Any contradiction must be resolved before code.
-   * **CPMS runtime logic references removed.**
+   * **CPMS runtime logic references removed (Confirmed 0 matches).**
 
 2. **Create repo skeleton (Done)**
 
