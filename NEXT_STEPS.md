@@ -122,7 +122,7 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 3 — Site constraints & projection (now)
+## Phase 3 — Site constraints & projection (Done)
 
 **Goal:** Simulate grid pressure without simulating physics.
 
@@ -141,7 +141,7 @@ Do not parallelize across layers prematurely.
      * SuspendedEVSE
      * Faulted
 
-3. **Failure propagation**
+3. **Failure propagation (Done)**
 
    * One EVSE fault affecting site cap
    * Deterministic ordering
@@ -153,11 +153,11 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 4 — OCPP 2.1 surface
+## Phase 4 — OCPP 2.1 surface (now)
 
 **Goal:** Make the protocol surface undeniable.
 
-1. **Message models**
+1. **Message models (now)**
 
    * BootNotification
    * StatusNotification

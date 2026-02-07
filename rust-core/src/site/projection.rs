@@ -46,37 +46,47 @@ pub fn check_constraints(
         feeder_evses.insert(feeder_id.clone(), Vec::new());
     }
 
-    let all_evses: Vec<i32> = evse_loads.keys().cloned().collect();
+    // Sort EVSEs for deterministic iteration
+    let mut all_evses: Vec<i32> = evse_loads.keys().cloned().collect();
+    all_evses.sort();
 
     // Sum up loads
-    for (&evse_id, &load) in evse_loads {
-        if load < 0.0 {
-            continue;
-        } // Ignore negative load for capacity check
+    for &evse_id in &all_evses {
+        if let Some(&load) = evse_loads.get(&evse_id) {
+            if load < 0.0 {
+                continue;
+            } // Ignore negative load for capacity check
 
-        site_total_load += load;
+            site_total_load += load;
 
-        if let Some(feeder) = topology.get_feeder_for_evse(evse_id) {
-            let load_entry = feeder_loads.entry(feeder.id.clone()).or_insert(0.0);
-            *load_entry += load;
+            if let Some(feeder) = topology.get_feeder_for_evse(evse_id) {
+                let load_entry = feeder_loads.entry(feeder.id.clone()).or_insert(0.0);
+                *load_entry += load;
 
-            let evse_entry = feeder_evses.entry(feeder.id.clone()).or_default();
-            evse_entry.push(evse_id);
+                let evse_entry = feeder_evses.entry(feeder.id.clone()).or_default();
+                evse_entry.push(evse_id);
+            }
         }
     }
 
+    // Sort feeders for deterministic iteration
+    let mut sorted_feeder_ids: Vec<String> = feeder_loads.keys().cloned().collect();
+    sorted_feeder_ids.sort();
+
     // Check Feeder capacities
-    for (feeder_id, total_load) in feeder_loads {
-        if let Some(feeder) = topology.feeders.get(&feeder_id) {
-            if total_load > feeder.capacity {
-                violations.push(Violation {
-                    violation_type: ViolationType::FeederCapacityExceeded {
-                        feeder_id: feeder_id.clone(),
-                        limit: feeder.capacity,
-                        actual: total_load,
-                    },
-                    affected_evses: feeder_evses.get(&feeder_id).cloned().unwrap_or_default(),
-                });
+    for feeder_id in sorted_feeder_ids {
+        if let Some(&total_load) = feeder_loads.get(&feeder_id) {
+            if let Some(feeder) = topology.feeders.get(&feeder_id) {
+                if total_load > feeder.capacity {
+                    violations.push(Violation {
+                        violation_type: ViolationType::FeederCapacityExceeded {
+                            feeder_id: feeder_id.clone(),
+                            limit: feeder.capacity,
+                            actual: total_load,
+                        },
+                        affected_evses: feeder_evses.get(&feeder_id).cloned().unwrap_or_default(),
+                    });
+                }
             }
         }
     }
@@ -228,5 +238,62 @@ mod tests {
 
         let effects = project_effects(&violations);
         assert!(!effects.is_empty());
+    }
+
+    #[test]
+    fn test_determinism_ordering() {
+        // Run checks multiple times and ensure output order is identical
+        let topology = create_test_topology();
+        let mut loads = HashMap::new();
+        // Insert in random order (HashMap does this anyway)
+        loads.insert(1, 4000.0);
+        loads.insert(2, 4000.0);
+        loads.insert(3, 4000.0);
+        loads.insert(4, 4000.0);
+        // Feeder1: 8000 > 5000
+        // Feeder2: 8000 > 5000
+        // Total: 16000 > 10000
+
+        let run1 = check_constraints(&topology, &loads);
+        let effects1 = project_effects(&run1);
+
+        let run2 = check_constraints(&topology, &loads);
+        let effects2 = project_effects(&run2);
+
+        assert_eq!(run1.len(), run2.len());
+        assert_eq!(effects1.len(), effects2.len());
+
+        // Check exact equality of Effects (which implements PartialEq)
+        for (i, e1) in effects1.iter().enumerate() {
+            let e2 = &effects2[i];
+            assert_eq!(e1, e2, "Mismatch at index {}", i);
+        }
+
+        // Logic:
+        // 1. Iterate sorted feeders. feeder1, feeder2.
+        //    Violations pushed: Feeder1, then Feeder2.
+        // 2. Check Transformer.
+        //    Violations pushed: Transformer.
+        //
+        // So expected order of violations: Feeder1, Feeder2, Transformer.
+
+        assert_eq!(run1.len(), 3);
+
+        match &run1[0].violation_type {
+            ViolationType::FeederCapacityExceeded { feeder_id, .. } => {
+                assert_eq!(feeder_id, "feeder1")
+            }
+            _ => panic!("Expected feeder1 first"),
+        }
+        match &run1[1].violation_type {
+            ViolationType::FeederCapacityExceeded { feeder_id, .. } => {
+                assert_eq!(feeder_id, "feeder2")
+            }
+            _ => panic!("Expected feeder2 second"),
+        }
+        match &run1[2].violation_type {
+            ViolationType::TransformerCapacityExceeded { .. } => {}
+            _ => panic!("Expected transformer last"),
+        }
     }
 }
