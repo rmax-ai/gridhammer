@@ -126,6 +126,16 @@ Agents must NOT:
 * Implement CPMS runtime behavior. GridHammer tests the CPMS; it does not implement CPMS logic (e.g. pricing engines, tariff calculations, billing/invoicing, user ledger management, roaming settlement, complex retries, CSMS decisioning).
 * Implement Gateway heuristics (no "smart" connection handling, smoothing, or hidden retries).
 * Implement UI-defined behavior (UI must remain read-only).
+
+## 7.1 Forbidden Scope (Explicit)
+
+The following areas are permanently out of scope. Agents must reject any task that involves:
+
+*   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
+*   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
+*   **Smart Gateway**: No retry smoothing, connection holding, or "smart" pipes.
+*   **Physics**: No battery chemistry or grid physics.
+
 * Modify infrastructure, repo structure, or protocols without human signoff.
 * Bypass tests, lints, or RUNBOOK commands.
 
