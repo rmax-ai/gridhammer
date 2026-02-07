@@ -8,6 +8,7 @@ pub enum EvseState {
     SuspendedEV,
     SuspendedEVSE,
     Faulted,
+    Unavailable,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
