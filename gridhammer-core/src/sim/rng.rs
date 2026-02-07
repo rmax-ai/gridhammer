@@ -1,11 +1,11 @@
-use rand::rngs::StdRng;
 use rand::SeedableRng;
+use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Debug, Clone)]
 pub struct Rng {
     seed: u64,
-    rng: StdRng,
+    rng: ChaCha8Rng,
 }
 
 impl Serialize for Rng {
@@ -31,7 +31,7 @@ impl Rng {
     pub fn new(seed: u64) -> Self {
         Rng {
             seed,
-            rng: StdRng::seed_from_u64(seed),
+            rng: ChaCha8Rng::seed_from_u64(seed),
         }
     }
 
