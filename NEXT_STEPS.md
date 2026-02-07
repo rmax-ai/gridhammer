@@ -165,13 +165,13 @@ Do not parallelize across layers prematurely.
    * MeterValues
    * SetChargingProfile
 
-2. **Semantic validation (now)**
+2. **Semantic validation (Done)**
 
    * Required fields
    * State-dependent legality
    * Message ordering invariants
 
-3. **Trace output**
+3. **Trace output (now)**
 
    * `ocpp_trace.jsonl`
    * Stable ordering
