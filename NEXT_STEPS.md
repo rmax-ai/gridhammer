@@ -157,7 +157,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make the protocol surface undeniable.
 
-1. **Message models (now)**
+1. **Message models (Done)**
 
    * BootNotification
    * StatusNotification
@@ -165,7 +165,7 @@ Do not parallelize across layers prematurely.
    * MeterValues
    * SetChargingProfile
 
-2. **Semantic validation**
+2. **Semantic validation (now)**
 
    * Required fields
    * State-dependent legality
