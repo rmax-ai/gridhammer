@@ -109,66 +109,87 @@ run_ci() {
   echo -e "${BLUE}Running CI checks...${NC}" | tee -a "$ci_log"
   echo "--- CI $(date -u +"%Y-%m-%dT%H:%M:%SZ") ---" >>"$ci_log"
 
-  if ! command -v golangci-lint >/dev/null 2>&1; then
-    if [[ -x "./scripts/install-golangci-lint.sh" ]]; then
-      echo "[ci] Installing golangci-lint (pinned)" | tee -a "$ci_log"
-      set +e
-      ./scripts/install-golangci-lint.sh >>"$ci_log" 2>&1
-      local install_rc=$?
-      set -e
-      if ((install_rc != 0)); then
-        echo "[ci] golangci-lint install failed (rc=$install_rc)" | tee -a "$ci_log"
-        status=1
-      fi
+  # ----------------------------------------------------------------
+  # Rust Checks
+  # ----------------------------------------------------------------
+  if command -v cargo >/dev/null 2>&1; then
+    local cargo_tomls
+    cargo_tomls=$(find . -name Cargo.toml \
+      -not -path "*/.git/*" \
+      -not -path "*/.opencode/*" \
+      -not -path "*/target/*" \
+      -not -path "*/node_modules/*" \
+      -print 2>/dev/null | sort)
+
+    if [[ -n "$cargo_tomls" ]]; then
+      while IFS= read -r cargo_file; do
+        [[ -z "$cargo_file" ]] && continue
+        local crate_dir
+        crate_dir=$(dirname "$cargo_file")
+        echo "[ci] Rust Crate: $crate_dir" | tee -a "$ci_log"
+
+        set +e
+        (
+          cd "$crate_dir" || exit 2
+          cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
+        ) >>"$ci_log" 2>&1
+        local rust_rc=$?
+        set -e
+        if ((rust_rc != 0)); then
+          echo "[ci] Rust checks failed for $crate_dir (rc=$rust_rc)" | tee -a "$ci_log"
+          status=1
+        fi
+      done <<<"$cargo_tomls"
     else
-      echo "[ci] golangci-lint not found and installer script missing" | tee -a "$ci_log"
-      status=1
+      echo "[ci] No Rust crates found (skipping)" | tee -a "$ci_log"
     fi
+  else
+    echo "[ci] cargo not found (skipping Rust checks)" | tee -a "$ci_log"
   fi
 
-  local mod_dirs
-  mod_dirs=$(find . -name go.mod \
-    -not -path "*/.git/*" \
-    -not -path "*/vendor/*" \
-    -not -path "*/node_modules/*" \
-    -print 2>/dev/null | sed 's|/go\.mod$||' | sort)
+  # ----------------------------------------------------------------
+  # TypeScript/Node Checks
+  # ----------------------------------------------------------------
+  if command -v npm >/dev/null 2>&1; then
+    local package_jsons
+    package_jsons=$(find . -name package.json \
+      -not -path "*/.git/*" \
+      -not -path "*/.opencode/*" \
+      -not -path "*/target/*" \
+      -not -path "*/node_modules/*" \
+      -print 2>/dev/null | sort)
 
-  if [[ -z "$mod_dirs" ]]; then
-    echo "[ci] No go.mod files found" | tee -a "$ci_log"
-    status=1
+    if [[ -n "$package_jsons" ]]; then
+      while IFS= read -r pkg_file; do
+        [[ -z "$pkg_file" ]] && continue
+        local pkg_dir
+        pkg_dir=$(dirname "$pkg_file")
+        echo "[ci] Node Project: $pkg_dir" | tee -a "$ci_log"
+
+        set +e
+        (
+          cd "$pkg_dir" || exit 2
+          # Only run if scripts exist
+          if grep -q '"test":' package.json; then
+            npm test
+          fi
+          if grep -q '"lint":' package.json; then
+            npm run lint
+          fi
+        ) >>"$ci_log" 2>&1
+        local node_rc=$?
+        set -e
+        if ((node_rc != 0)); then
+          echo "[ci] Node checks failed for $pkg_dir (rc=$node_rc)" | tee -a "$ci_log"
+          status=1
+        fi
+      done <<<"$package_jsons"
+    else
+      echo "[ci] No Node projects found (skipping)" | tee -a "$ci_log"
+    fi
+  else
+    echo "[ci] npm not found (skipping Node checks)" | tee -a "$ci_log"
   fi
-
-  while IFS= read -r mod_dir; do
-    [[ -z "$mod_dir" ]] && continue
-    echo "[ci] Module: $mod_dir" | tee -a "$ci_log"
-
-    set +e
-    (
-      cd "$mod_dir" || exit 2
-      go fmt ./... && go vet ./... && go test -race ./...
-    ) >>"$ci_log" 2>&1
-    local go_rc=$?
-    set -e
-    if ((go_rc != 0)); then
-      echo "[ci] Go checks failed for $mod_dir (rc=$go_rc)" | tee -a "$ci_log"
-      status=1
-      continue
-    fi
-
-    if command -v golangci-lint >/dev/null 2>&1; then
-      set +e
-      (
-        cd "$mod_dir" || exit 2
-        golangci-lint run ./...
-      ) >>"$ci_log" 2>&1
-      local lint_rc=$?
-      set -e
-      if ((lint_rc != 0)); then
-        echo "[ci] golangci-lint failed for $mod_dir (rc=$lint_rc)" | tee -a "$ci_log"
-        status=1
-      fi
-    fi
-  done <<<"$mod_dirs"
 
   if ((status != 0)); then
     cp -f "$ci_log" "$ci_latest"
