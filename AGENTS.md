@@ -127,17 +127,23 @@ Agents must NOT:
 * Implement Gateway heuristics (no "smart" connection handling, smoothing, or hidden retries).
 * Implement UI-defined behavior (UI must remain read-only).
 
-## 7.1 Forbidden Scope (Explicit)
+## 7.1 Forbidden Domain Scope
 
-The following areas are permanently out of scope. Agents must reject any task that involves:
+The following functional areas are **permanently out of scope**. Agents must reject any task that involves:
 
 *   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
 *   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
-*   **Smart Gateway**: No retry smoothing, connection holding, or "smart" pipes.
-*   **Physics**: No battery chemistry or grid physics.
+*   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
+*   **Physics**: No battery chemistry, real power electronics, or grid physics.
 
-* Modify infrastructure, repo structure, or protocols without human signoff.
+## 7.2 Operational Constraints
+
+Agents must NOT:
+
+* Modify infrastructure, repo structure, or protocols without explicit human signoff.
 * Bypass tests, lints, or RUNBOOK commands.
+* Invent non-OCPP messages or states.
+* Implement UI-defined behavior (UI must remain read-only).
 
 When uncertain: stop, analyze, ask.
 

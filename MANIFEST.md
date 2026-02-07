@@ -80,6 +80,8 @@ Artifacts are immutable.
 * No hidden state
 * No UI-defined logic
 * No CPMS runtime logic (pricing, billing, OCPI, ledgers)
+* No smart gateway logic (retry smoothing, connection holding)
+* No physics simulation (battery chemistry, grid physics)
 
 ---
 
