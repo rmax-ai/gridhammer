@@ -24,6 +24,7 @@ Do not parallelize across layers prematurely.
      * `MANIFEST.md`
    * Steward-agent reviews for internal consistency.
    * Any contradiction must be resolved before code.
+   * **CPMS runtime logic references removed.**
 
 2. **Create repo skeleton (Done)**
 
