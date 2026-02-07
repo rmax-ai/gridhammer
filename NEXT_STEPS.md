@@ -126,7 +126,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Simulate grid pressure without simulating physics.
 
-1. **Site topology model**
+1. **Site topology model (Done)**
 
    * Transformer cap
    * Feeder groups
