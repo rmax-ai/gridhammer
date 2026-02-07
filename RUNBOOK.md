@@ -131,10 +131,10 @@ Never trust visualizations without trace confirmation.
 GridHammer is a **protocol stress tool**, not a CPMS implementation.
 
 **Do not:**
-* Attempt to simulate pricing engines or billing logic.
-* Implement OCPI roaming behavior.
-* Add user ledger or smart-charging logic to the simulation.
-* Expect "smart" gateway retries (GridHammer fails fast).
+*   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
+*   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
+*   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
+*   **Physics**: No battery chemistry, real power electronics, or grid physics.
 
 If you need these features, you are looking for a CPMS, not GridHammer.
 

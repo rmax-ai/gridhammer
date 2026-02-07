@@ -116,7 +116,7 @@ Some feature requests are rejected by design.
 ## Decision 8: No CPMS Runtime Logic
 
 **Decision**
-GridHammer expressly forbids implementation of CPMS business logic (pricing, billing, OCPI, user ledgers).
+GridHammer expressly forbids implementation of CPMS business logic (pricing, billing, invoicing, user ledgers, roaming settlement).
 
 **Rationale**
 * GridHammer is a test tool, not a CPMS.

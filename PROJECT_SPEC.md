@@ -313,9 +313,9 @@ This must be enforced in tooling.
 
 This section enumerates behavior that is explicitly **out of scope**. Any attempt to implement these features must be rejected.
 
-*   **CPMS runtime logic**: GridHammer tests the CPMS; it does not implement CPMS logic (e.g., pricing engines, user management, billing).
-*   **Pricing / OCPI**: No OCPI roaming or pricing module logic.
-*   **Gateway heuristics**: The gateway is a dumb pipe. No retry logic, no smoothing, no "smart" connection handling that obscures protocol failures.
+*   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
+*   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
+*   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
 *   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
 
 

@@ -119,6 +119,7 @@ Forbidden:
 * ISO-15118 PLC timing
 * Battery chemistry
 * Real power electronics
-* CPMS runtime logic (pricing, billing, OCPI, user ledgers)
-* UI simulation or "smart" gateway logic (smoothing, retries)
+* CPMS runtime logic (pricing, billing, invoicing, user ledgers, roaming settlement)
+* OCPI / Roaming logic (OCHP, OICP)
+* Smart Gateway logic (retry smoothing, connection holding, message buffering)
 
