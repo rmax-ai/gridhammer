@@ -88,6 +88,19 @@ Validation checks:
 
 ---
 
+## Exporting a run
+
+```
+gridhammer export run-2026-02-07T18-30-00
+```
+
+Exports:
+
+* Compacted artifacts for sharing
+* Portable archive format
+
+---
+
 ## Interpreting failures
 
 Check in order:
