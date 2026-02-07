@@ -61,10 +61,13 @@ Each agent owns exactly one service path. Ownership cannot be shared or reinterp
 
 **Explicitly Forbidden Agents:**
 * `pricing-agent` (CPMS concern)
-* `ocpi-agent` (CPMS concern)
 * `billing-agent` (CPMS concern)
-* `user-agent` (CPMS concern)
+* `invoicing-agent` (CPMS concern)
 * `ledger-agent` (CPMS concern)
+* `user-agent` (CPMS concern)
+* `ocpi-agent` (CPMS concern)
+* `roaming-agent` (CPMS concern)
+* `settlement-agent` (CPMS concern)
 
 Agents must never edit files outside their owned path without explicit human authorization.
 Communication between services is event-driven (events, protobuf, OpenAPI) only. No synchronous direct calls.
