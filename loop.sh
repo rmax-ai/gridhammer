@@ -19,7 +19,7 @@ fi
 GOAL="$*"
 
 # Allow environment overrides for easier CI/debugging.
-: "${MAX_ITERATIONS:=50}"
+: "${MAX_ITERATIONS:=100}"
 : "${TIMEOUT:=300}"
 : "${LOG_DIR:=logs}"
 : "${PROMPT_FILE:=LOOP_PROMPT.md}"
