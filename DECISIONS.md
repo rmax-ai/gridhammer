@@ -128,6 +128,34 @@ Agents like `pricing-agent` or `billing-agent` are permanently out of scope.
 
 ---
 
+## Decision 9: No OCPI or Roaming
+
+**Decision**
+GridHammer will not implement OCPI, OCHP, OICP, or any roaming settlement protocols.
+
+**Rationale**
+* GridHammer simulates a single Charging Station (or set of EVSEs) connecting to a single CSMS.
+* Roaming complexity belongs in the CSMS or a dedicated roaming simulator.
+
+**Consequence**
+No `ocpi-agent`.
+
+---
+
+## Decision 10: No Smart Gateway Logic
+
+**Decision**
+The Gateway layer must be a dumb pipe. No message buffering (beyond TCP/WebSocket framing), no retry smoothing, no connection holding.
+
+**Rationale**
+* "Smart" gateways hide network/CSMS failures.
+* We want to expose failures, not mask them.
+
+**Consequence**
+Network errors propagate immediately to the core FSM.
+
+---
+
 ## Reconsideration policy
 
 Decisions here change only if:
