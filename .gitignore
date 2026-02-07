@@ -15,16 +15,6 @@
 *.swp
 *.swo
 
-# --- Go ---
-# Binaries
-bin/
-*.exe
-*.test
-*.prof
-services/gateway/gateway
-services/registry/registry
-services/session/session
-
 # --- Rust ---
 # Build artifacts
 target/
@@ -77,7 +67,7 @@ coverage/
 daemon_pid.txt
 
 # -------------------------------------------------
-# GridPulse CPMS — runtime & agent artifacts
+# GridHammer — runtime & agent artifacts
 # -------------------------------------------------
 
 # loop.sh runtime logs
