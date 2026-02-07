@@ -103,7 +103,7 @@ Do not parallelize across layers prematurely.
    * Deterministic tie-breaking
    * Zero-power semantics
 
-3. **Executor invariants**
+3. **Executor invariants (Done, Verified 2026-02-07)**
 
    * Every enforced limit has a reason
    * No silent clamping

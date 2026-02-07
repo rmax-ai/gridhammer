@@ -4,6 +4,13 @@ use super::model::{
 use chrono::{DateTime, Duration, Utc};
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnforcedLimit {
+    pub limit: f64,
+    pub unit: ChargingRateUnit,
+    pub source_profile_id: i32,
+}
+
 pub struct Executor;
 
 impl Executor {
@@ -12,7 +19,7 @@ impl Executor {
         current_time: DateTime<Utc>,
         transaction_start: Option<DateTime<Utc>>,
         _transaction_id: Option<String>,
-    ) -> Option<(f64, ChargingRateUnit)> {
+    ) -> Option<EnforcedLimit> {
         // Filter valid profiles
         let valid_profiles: Vec<ChargingProfile> = profiles
             .into_iter()
@@ -42,29 +49,77 @@ impl Executor {
         }
 
         // Get planned limit from TxProfile or TxDefaultProfile
-        let planned = selected_profiles
+        let planned_profile = selected_profiles
             .get(&ChargingProfilePurpose::TxProfile)
-            .or_else(|| selected_profiles.get(&ChargingProfilePurpose::TxDefaultProfile))
-            .map(|profile| evaluate_profile(profile, current_time, transaction_start));
+            .or_else(|| selected_profiles.get(&ChargingProfilePurpose::TxDefaultProfile));
+
+        let planned = planned_profile.map(|profile| {
+            let (val, unit) = evaluate_profile(profile, current_time, transaction_start);
+            (val, unit, profile.id)
+        });
 
         // Get limit from ChargingStationMaxProfile
-        let limit = selected_profiles
-            .get(&ChargingProfilePurpose::ChargingStationMaxProfile)
-            .map(|profile| evaluate_profile(profile, current_time, transaction_start));
+        let limit_profile =
+            selected_profiles.get(&ChargingProfilePurpose::ChargingStationMaxProfile);
+        let limit = limit_profile.map(|profile| {
+            let (val, unit) = evaluate_profile(profile, current_time, transaction_start);
+            (val, unit, profile.id)
+        });
 
-        // Combine: min of planned and limit, with same unit assumption
-        match (planned, limit) {
-            (Some((p_val, p_unit)), Some((l_val, l_unit))) => {
+        // Combine: min of planned and limit
+        let result = match (planned, limit) {
+            (Some((p_val, p_unit, p_id)), Some((l_val, l_unit, l_id))) => {
                 if p_unit == l_unit {
-                    Some((p_val.min(l_val), p_unit))
+                    if p_val < l_val {
+                        Some(EnforcedLimit {
+                            limit: p_val,
+                            unit: p_unit,
+                            source_profile_id: p_id,
+                        })
+                    } else {
+                        Some(EnforcedLimit {
+                            limit: l_val,
+                            unit: l_unit,
+                            source_profile_id: l_id,
+                        })
+                    }
                 } else {
-                    // Units differ, assume planned unit or handle error; for now, use planned
-                    Some((p_val.min(l_val), p_unit))
+                    // Fallback: If units differ, prefer StationMax as safety net
+                    Some(EnforcedLimit {
+                        limit: l_val,
+                        unit: l_unit,
+                        source_profile_id: l_id,
+                    })
                 }
             }
-            (Some((p_val, p_unit)), None) => Some((p_val, p_unit)),
-            (None, Some((l_val, l_unit))) => Some((l_val, l_unit)),
+            (Some((p_val, p_unit, p_id)), None) => Some(EnforcedLimit {
+                limit: p_val,
+                unit: p_unit,
+                source_profile_id: p_id,
+            }),
+            (None, Some((l_val, l_unit, l_id))) => Some(EnforcedLimit {
+                limit: l_val,
+                unit: l_unit,
+                source_profile_id: l_id,
+            }),
             (None, None) => None, // unlimited
+        };
+
+        // Enforce invariants: No negative, No NaN
+        if let Some(mut enforced) = result {
+            if enforced.limit.is_nan() {
+                panic!(
+                    "Executor invariant violated: limit is NaN for profile {}",
+                    enforced.source_profile_id
+                );
+            }
+            if enforced.limit < 0.0 {
+                // Clamp to 0.0 but keep the source ID
+                enforced.limit = 0.0;
+            }
+            Some(enforced)
+        } else {
+            None
         }
     }
 }
@@ -173,7 +228,14 @@ mod tests {
             ),
         ];
         let result = Executor::resolve(profiles, current_time, None, None);
-        assert_eq!(result, Some((2000.0, ChargingRateUnit::Watts)));
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 2000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 2
+            })
+        );
     }
 
     #[test]
@@ -198,7 +260,14 @@ mod tests {
         profile.valid_from = valid_from;
         profile.valid_to = valid_to;
         let result = Executor::resolve(vec![profile.clone()], current_time, None, None);
-        assert_eq!(result, Some((1000.0, ChargingRateUnit::Watts)));
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 1000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 1
+            })
+        );
 
         profile.valid_to = invalid_to;
         let result = Executor::resolve(vec![profile], current_time, None, None);
@@ -231,7 +300,14 @@ mod tests {
         );
         profile.recurrency_kind = Some(RecurrencyKind::Daily);
         let result = Executor::resolve(vec![profile], current_time, None, None);
-        assert_eq!(result, Some((2000.0, ChargingRateUnit::Watts))); // after 1 hour
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 2000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 1
+            })
+        );
     }
 
     #[test]
@@ -259,7 +335,14 @@ mod tests {
             ChargingRateUnit::Watts,
         );
         let result = Executor::resolve(vec![profile], current_time, transaction_start, None);
-        assert_eq!(result, Some((2000.0, ChargingRateUnit::Watts))); // 1 hour = 3600s > 1800s
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 2000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 1
+            })
+        );
     }
 
     #[test]
@@ -292,6 +375,61 @@ mod tests {
             ChargingRateUnit::Watts,
         );
         let result = Executor::resolve(vec![tx_profile, max_profile], current_time, None, None);
-        assert_eq!(result, Some((2000.0, ChargingRateUnit::Watts))); // min of 3000 and 2000
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 2000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 2
+            })
+        );
+    }
+
+    #[test]
+    fn test_negative_clamping() {
+        let current_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
+        let profile = create_profile(
+            1,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: -100.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+        let result = Executor::resolve(vec![profile], current_time, None, None);
+        // Should be clamped to 0.0, but still attributed to ID 1
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 0.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 1
+            })
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Executor invariant violated: limit is NaN")]
+    fn test_nan_panic() {
+        let current_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
+        let profile = create_profile(
+            1,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: f64::NAN,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+        Executor::resolve(vec![profile], current_time, None, None);
     }
 }
