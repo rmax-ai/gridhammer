@@ -14,7 +14,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make it impossible to build the wrong thing.
 
-1. **Freeze contracts**
+1. **Freeze contracts (Done)**
 
    * Finalize:
 
@@ -25,7 +25,7 @@ Do not parallelize across layers prematurely.
    * Steward-agent reviews for internal consistency.
    * Any contradiction must be resolved before code.
 
-2. **Create repo skeleton**
+2. **Create repo skeleton (Done)**
 
    ```
    gridhammer/
