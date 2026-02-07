@@ -1,8 +1,5 @@
 [workspace]
 members = [
-    "services/gateway",
-    "services/session",
-    "services/registry",
     "rust-core",
 ]
 resolver = "2"

@@ -14,6 +14,7 @@ Run these commands to verify the build:
 
 ### Rust Core
 ```bash
+cd rust-core
 cargo fmt -- --check
 cargo clippy -- -D warnings
 cargo test

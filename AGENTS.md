@@ -55,10 +55,9 @@ Each agent owns exactly one service path. Ownership cannot be shared or reinterp
 
 | Agent | Path |
 | --- | --- |
-| gateway-agent | services/gateway/** |
-| session-agent | services/session/** |
-| registry-agent | services/registry/** |
-| shared-agent | pkg/** (utility code only) |
+| rust-core-agent | rust-core/** |
+| cli-agent | ts-shell/** |
+| scenario-agent | scenarios/** |
 
 **Explicitly Forbidden Agents:**
 * `pricing-agent` (CPMS concern)
@@ -94,7 +93,7 @@ Rules:
 * **Zero silent failures** — log, metric, or assertion for observable invariants.
 * **Tests** — unit tests, integration (when applicable), contract tests for protocol edges, load tests for gateway artifacts.
 * **Coverage**: aim ≥ 80% for new modules that enforce core semantics.
-* **Go / Rust** — no panics, no global mutable state, context propagation, timeouts, retries/backoff in networking code.
+* **Rust** — no panics, no global mutable state, context propagation, timeouts, retries/backoff in networking code.
 * **TypeScript** — typed schemas, schema validation (Zod/Yup) for scenarios and CLI inputs.
 
 ---
