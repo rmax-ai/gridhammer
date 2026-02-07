@@ -63,6 +63,8 @@ Each agent owns exactly one service path. Ownership cannot be shared or reinterp
 * `pricing-agent` (CPMS concern)
 * `ocpi-agent` (CPMS concern)
 * `billing-agent` (CPMS concern)
+* `user-agent` (CPMS concern)
+* `ledger-agent` (CPMS concern)
 
 Agents must never edit files outside their owned path without explicit human authorization.
 Communication between services is event-driven (events, protobuf, OpenAPI) only. No synchronous direct calls.
@@ -116,7 +118,7 @@ Agents must NOT:
 
 * Invent non-OCPP messages or states.
 * Introduce feature creep beyond PROJECT_PROMPT scope (MCS focus, deterministic, CLI-first).
-* Implement CPMS runtime behavior (e.g. pricing, billing, complex retries, CSMS decisioning).
+* Implement CPMS runtime behavior (e.g. pricing engines, tariff calculations, billing/invoicing, user ledger management, roaming settlement, complex retries, CSMS decisioning).
 * Implement Gateway heuristics (no "smart" connection handling, smoothing, or hidden retries).
 * Implement UI-defined behavior (UI must remain read-only).
 * Modify infrastructure, repo structure, or protocols without human signoff.
