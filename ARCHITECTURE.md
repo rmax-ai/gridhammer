@@ -1,0 +1,123 @@
+# GridHammer — Architecture
+
+## Purpose
+
+GridHammer is a **deterministic OCPP 2.1 stress-testing platform** designed to expose failures in CPMS/CSMS implementations under heavy-duty Megawatt Charging System (MCS) load.
+
+GridHammer simulates **protocol truth**, not physics.
+
+---
+
+## Architectural principles
+
+1. **Rust is the source of truth**
+
+   * All protocol semantics, state machines, and invariants live in Rust.
+2. **TypeScript is control and observation**
+
+   * CLI, scenarios, orchestration, and visualization only.
+3. **Determinism over realism**
+
+   * Replayability is mandatory.
+4. **No UI-driven behavior**
+
+   * UI never alters simulation semantics.
+5. **Illegal states must be unrepresentable**
+
+   * Prefer compile-time guarantees.
+
+---
+
+## High-level system layout
+
+```
+TypeScript Shell (control + lens)
+│
+│  CLI  ── scenarios ── experiment registry ── UI
+│
+└──── JSON / IPC ────▶
+                    Rust Core (authoritative)
+                    │
+                    ├─ Simulation kernel
+                    ├─ EVSE FSMs
+                    ├─ ChargingProfile executor
+                    ├─ OCPP 2.1 semantics
+                    └─ Invariant enforcement
+```
+
+---
+
+## Rust core responsibilities
+
+The Rust core owns:
+
+* EVSE finite state machines
+* TransactionEvent lifecycle correctness
+* ChargingProfile resolution and enforcement
+* Site-level constraint projection
+* Deterministic simulation clock
+* Protocol invariants and assertions
+
+The Rust core **does not**:
+
+* Parse CLI flags
+* Render UI
+* Mutate scenarios
+* Persist experiment metadata
+
+---
+
+## TypeScript shell responsibilities
+
+The TypeScript shell owns:
+
+* CLI UX (`gridhammer`)
+* Scenario authoring and validation
+* Experiment registry
+* Artifact management
+* Visualization and diffing
+
+The TypeScript shell **does not**:
+
+* Implement protocol logic
+* Override Rust decisions
+* Apply hidden defaults
+
+---
+
+## Determinism model
+
+A run is uniquely defined by:
+
+* Scenario hash
+* Rust core version
+* Seed
+* CLI flags
+
+Any deviation invalidates comparison.
+
+---
+
+## Extension boundaries
+
+Allowed:
+
+* New scenario types
+* Additional invariants
+* New visualizations
+
+Forbidden:
+
+* UI-defined simulation behavior
+* Non-deterministic time
+* Implicit async logic in core
+
+---
+
+## Non-goals
+
+* ISO-15118 PLC timing
+* Battery chemistry
+* Real power electronics
+* CPMS UI simulation
+
