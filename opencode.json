@@ -1,0 +1,57 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "github-copilot/gemini-3-flash-preview",
+  "default_agent": "orchestrator",
+  "permission": {
+    "read": "allow",
+    "write": "allow",
+    "execute": "allow",
+    "bash": "allow"
+  },
+  "agent": {
+    "oracle-sisyphus": {
+      "model": "github-copilot/gemini-3-pro-preview"
+    },
+    "orchestrator": {
+      "model": "github-copilot/gemini-3-pro-preview"
+    },
+    "implement": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+    "terminal": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+    "review": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+    "test": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+
+    /* -----------------------------
+       GridPulse CPMS Agents (new)
+       ----------------------------- */
+
+    "gateway-agent": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+    "session-agent": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+    "registry-agent": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+    "pricing-agent": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+    "ocpi-agent": {
+      "model": "github-copilot/grok-code-fast-1"
+    },
+    "shared-agent": {
+      "model": "github-copilot/gemini-3-flash-preview"
+    },
+    "steward-agent": {
+      "model": "github-copilot/gemini-3-pro-preview"
+    }
+  }
+}
