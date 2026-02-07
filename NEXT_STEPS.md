@@ -132,7 +132,7 @@ Do not parallelize across layers prematurely.
    * Feeder groups
    * EVSE membership
 
-2. **Projection logic**
+2. **Projection logic (Done)**
 
    * Site constraint → EVSE-level effects
    * Expressed only as:
