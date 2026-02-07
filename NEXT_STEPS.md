@@ -91,7 +91,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Build the heart of GridHammer.
 
-1. **ChargingProfile model**
+1. **ChargingProfile model (Done)**
 
    * TxProfile
    * StationMaxProfile
