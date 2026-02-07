@@ -154,7 +154,7 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 4 — OCPP 2.1 surface (now)
+## Phase 4 — OCPP 2.1 surface (Done)
 
 **Goal:** Make the protocol surface undeniable.
 
