@@ -68,6 +68,8 @@ Each agent owns exactly one service path. Ownership cannot be shared or reinterp
 * `ocpi-agent` (CPMS concern)
 * `roaming-agent` (CPMS concern)
 * `settlement-agent` (CPMS concern)
+* `smart-gateway-agent` (Gateway heuristic concern)
+* `physics-agent` (Physics concern)
 
 Agents must never edit files outside their owned path without explicit human authorization.
 Communication between services is event-driven (events, protobuf, OpenAPI) only. No synchronous direct calls.
