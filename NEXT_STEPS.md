@@ -10,7 +10,7 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 0 — Ground truth locking (now)
+## Phase 0 — Ground truth locking (Done)
 
 **Goal:** Make it impossible to build the wrong thing.
 
@@ -37,7 +37,7 @@ Do not parallelize across layers prematurely.
 
    No implementation yet.
 
-3. **Add forbidden-scope checklist**
+3. **Add forbidden-scope checklist (Done)**
 
    * CPMS runtime logic
    * Pricing / OCPI
@@ -46,7 +46,7 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 1 — Rust core foundation (authoritative)
+## Phase 1 — Rust core foundation (authoritative) (now)
 
 **Goal:** Establish protocol truth and determinism.
 
