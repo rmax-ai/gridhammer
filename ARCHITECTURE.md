@@ -119,5 +119,5 @@ Forbidden:
 * ISO-15118 PLC timing
 * Battery chemistry
 * Real power electronics
-* CPMS UI simulation
+* CPMS runtime logic or UI simulation
 

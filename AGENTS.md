@@ -114,6 +114,7 @@ Agents must NOT:
 
 * Invent non-OCPP messages or states.
 * Introduce feature creep beyond PROJECT_PROMPT scope (MCS focus, deterministic, CLI-first).
+* Implement CPMS runtime behavior (e.g. pricing, billing, complex retries, CSMS decisioning).
 * Modify infrastructure, repo structure, or protocols without human signoff.
 * Bypass tests, lints, or RUNBOOK commands.
 

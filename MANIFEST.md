@@ -79,6 +79,7 @@ Artifacts are immutable.
 * No implicit defaults
 * No hidden state
 * No UI-defined logic
+* No CPMS runtime logic
 
 ---
 
