@@ -58,6 +58,7 @@ Each agent owns exactly one service path. Ownership cannot be shared or reinterp
 | rust-core-agent | rust-core/** |
 | cli-agent | ts-shell/** |
 | scenario-agent | scenarios/** |
+| steward-agent | . (governance) |
 
 **Explicitly Forbidden Agents:**
 * `pricing-agent` (CPMS concern)
