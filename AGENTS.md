@@ -118,7 +118,7 @@ Agents must NOT:
 
 * Invent non-OCPP messages or states.
 * Introduce feature creep beyond PROJECT_PROMPT scope (MCS focus, deterministic, CLI-first).
-* Implement CPMS runtime behavior (e.g. pricing engines, tariff calculations, billing/invoicing, user ledger management, roaming settlement, complex retries, CSMS decisioning).
+* Implement CPMS runtime behavior. GridHammer tests the CPMS; it does not implement CPMS logic (e.g. pricing engines, tariff calculations, billing/invoicing, user ledger management, roaming settlement, complex retries, CSMS decisioning).
 * Implement Gateway heuristics (no "smart" connection handling, smoothing, or hidden retries).
 * Implement UI-defined behavior (UI must remain read-only).
 * Modify infrastructure, repo structure, or protocols without human signoff.
