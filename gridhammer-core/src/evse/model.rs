@@ -1,9 +1,7 @@
 use super::fsm::transition;
 use super::state::{EvseEvent, EvseState};
 use super::transaction::TransactionManager;
-use crate::ocpp::messages::{
-    ChargingStateEnum, TransactionEventEnum, TransactionEventRequest, TriggerReasonEnum,
-};
+use crate::ocpp::messages::{ChargingStateEnum, TransactionEventRequest, TriggerReasonEnum};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
