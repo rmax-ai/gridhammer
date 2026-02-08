@@ -6,6 +6,7 @@ use super::clock::Clock;
 
 pub struct Engine {
     clock: Clock,
+    #[allow(dead_code)]
     rng: StdRng,
     evse_count: usize,
 }
@@ -25,6 +26,10 @@ impl Engine {
 
     pub fn clock(&self) -> &Clock {
         &self.clock
+    }
+
+    pub fn evse_count(&self) -> usize {
+        self.evse_count
     }
 }
 
