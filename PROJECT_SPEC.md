@@ -81,7 +81,6 @@ gridhammer-core/
 │
 ├─ profiles/
 │  ├─ model.rs         # ChargingProfile structures
-│  ├─ resolver.rs     # conflict resolution
 │  └─ executor.rs     # enforced power output
 │
 ├─ site/
