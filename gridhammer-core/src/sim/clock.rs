@@ -23,4 +23,8 @@ impl Clock {
     pub fn now(&self) -> DateTime<Utc> {
         self.start_time + self.tick_duration * self.tick_count as i32
     }
+
+    pub fn tick_count(&self) -> u64 {
+        self.tick_count
+    }
 }

@@ -2,12 +2,13 @@ use chrono::{DateTime, Utc};
 
 use super::clock::Clock;
 use super::rng::Rng;
+use crate::evse::state::EvseState;
 
 pub struct Engine {
     clock: Clock,
     #[allow(dead_code)]
     rng: Rng,
-    evse_count: usize,
+    evses: Vec<EvseState>,
 }
 
 impl Engine {
@@ -15,7 +16,7 @@ impl Engine {
         Self {
             clock: Clock::new(start),
             rng: Rng::new(seed),
-            evse_count,
+            evses: vec![EvseState::Available; evse_count],
         }
     }
 
@@ -28,7 +29,15 @@ impl Engine {
     }
 
     pub fn evse_count(&self) -> usize {
-        self.evse_count
+        self.evses.len()
+    }
+
+    pub fn evses(&self) -> &[EvseState] {
+        &self.evses
+    }
+
+    pub fn tick_count(&self) -> u64 {
+        self.clock.tick_count()
     }
 }
 
