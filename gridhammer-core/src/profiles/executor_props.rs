@@ -133,7 +133,7 @@ mod tests {
             transaction_start in arb_datetime_option()
         ) {
             let result = Executor::resolve(profiles, current_time, transaction_start, None);
-            if let Some(enforced) = result {
+            if let Ok(Some(enforced)) = result {
                 prop_assert!(enforced.limit >= 0.0, "Limit {} should be non-negative", enforced.limit);
             }
         }
@@ -145,7 +145,7 @@ mod tests {
             transaction_start in arb_datetime_option()
         ) {
             let result = Executor::resolve(profiles, current_time, transaction_start, None);
-            if let Some(enforced) = result {
+            if let Ok(Some(enforced)) = result {
                 prop_assert!(!enforced.limit.is_nan(), "Limit should not be NaN");
             }
         }
@@ -183,7 +183,7 @@ mod tests {
              let profiles = vec![p1.clone(), p2.clone()];
              let result = Executor::resolve(profiles, current_time, transaction_start, None);
 
-             if let Some(enforced) = result {
+             if let Ok(Some(enforced)) = result {
                  prop_assert_eq!(enforced.source_profile_id, p2.id);
              }
         }

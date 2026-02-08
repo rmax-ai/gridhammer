@@ -11,6 +11,12 @@ pub struct EnforcedLimit {
     pub source_profile_id: i32,
 }
 
+#[derive(Debug, thiserror::Error, PartialEq)]
+pub enum ExecutorError {
+    #[error("Limit is NaN for profile {0}")]
+    LimitIsNan(i32),
+}
+
 pub struct Executor;
 
 impl Executor {
@@ -19,7 +25,7 @@ impl Executor {
         current_time: DateTime<Utc>,
         transaction_start: Option<DateTime<Utc>>,
         _transaction_id: Option<String>,
-    ) -> Option<EnforcedLimit> {
+    ) -> Result<Option<EnforcedLimit>, ExecutorError> {
         // Filter valid profiles
         let valid_profiles: Vec<ChargingProfile> = profiles
             .into_iter()
@@ -108,18 +114,15 @@ impl Executor {
         // Enforce invariants: No negative, No NaN
         if let Some(mut enforced) = result {
             if enforced.limit.is_nan() {
-                panic!(
-                    "Executor invariant violated: limit is NaN for profile {}",
-                    enforced.source_profile_id
-                );
+                return Err(ExecutorError::LimitIsNan(enforced.source_profile_id));
             }
             if enforced.limit < 0.0 {
                 // Clamp to 0.0 but keep the source ID
                 enforced.limit = 0.0;
             }
-            Some(enforced)
+            Ok(Some(enforced))
         } else {
-            None
+            Ok(None)
         }
     }
 }
@@ -227,7 +230,7 @@ mod tests {
                 ChargingRateUnit::Watts,
             ),
         ];
-        let result = Executor::resolve(profiles, current_time, None, None);
+        let result = Executor::resolve(profiles, current_time, None, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
@@ -259,7 +262,7 @@ mod tests {
         );
         profile.valid_from = valid_from;
         profile.valid_to = valid_to;
-        let result = Executor::resolve(vec![profile.clone()], current_time, None, None);
+        let result = Executor::resolve(vec![profile.clone()], current_time, None, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
@@ -270,7 +273,7 @@ mod tests {
         );
 
         profile.valid_to = invalid_to;
-        let result = Executor::resolve(vec![profile], current_time, None, None);
+        let result = Executor::resolve(vec![profile], current_time, None, None).unwrap();
         assert_eq!(result, None);
     }
 
@@ -299,7 +302,7 @@ mod tests {
             ChargingRateUnit::Watts,
         );
         profile.recurrency_kind = Some(RecurrencyKind::Daily);
-        let result = Executor::resolve(vec![profile], current_time, None, None);
+        let result = Executor::resolve(vec![profile], current_time, None, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
@@ -334,7 +337,8 @@ mod tests {
             None,
             ChargingRateUnit::Watts,
         );
-        let result = Executor::resolve(vec![profile], current_time, transaction_start, None);
+        let result =
+            Executor::resolve(vec![profile], current_time, transaction_start, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
@@ -374,7 +378,8 @@ mod tests {
             Some(current_time),
             ChargingRateUnit::Watts,
         );
-        let result = Executor::resolve(vec![tx_profile, max_profile], current_time, None, None);
+        let result =
+            Executor::resolve(vec![tx_profile, max_profile], current_time, None, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
@@ -401,7 +406,7 @@ mod tests {
             Some(current_time),
             ChargingRateUnit::Watts,
         );
-        let result = Executor::resolve(vec![profile], current_time, None, None);
+        let result = Executor::resolve(vec![profile], current_time, None, None).unwrap();
         // Should be clamped to 0.0, but still attributed to ID 1
         assert_eq!(
             result,
@@ -414,8 +419,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Executor invariant violated: limit is NaN")]
-    fn test_nan_panic() {
+    fn test_nan_error() {
         let current_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
         let profile = create_profile(
             1,
@@ -430,7 +434,8 @@ mod tests {
             Some(current_time),
             ChargingRateUnit::Watts,
         );
-        Executor::resolve(vec![profile], current_time, None, None);
+        let result = Executor::resolve(vec![profile], current_time, None, None);
+        assert_eq!(result, Err(ExecutorError::LimitIsNan(1)));
     }
 
     #[test]
@@ -480,7 +485,8 @@ mod tests {
         );
 
         // p2 beats p1 (stack level)
-        let result = Executor::resolve(vec![p1.clone(), p2.clone()], current_time, None, None);
+        let result =
+            Executor::resolve(vec![p1.clone(), p2.clone()], current_time, None, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
@@ -491,7 +497,8 @@ mod tests {
         );
 
         // p3 beats p2 (same stack level, higher ID)
-        let result = Executor::resolve(vec![p2.clone(), p3.clone()], current_time, None, None);
+        let result =
+            Executor::resolve(vec![p2.clone(), p3.clone()], current_time, None, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
@@ -540,7 +547,7 @@ mod tests {
         let profiles = vec![p1, p2];
 
         // At T=0, p1 is active
-        let res1 = Executor::resolve(profiles.clone(), start_time, None, None);
+        let res1 = Executor::resolve(profiles.clone(), start_time, None, None).unwrap();
         assert_eq!(res1.unwrap().source_profile_id, 1);
 
         // At T=29, p1 is still active
@@ -549,7 +556,8 @@ mod tests {
             start_time + Duration::minutes(29),
             None,
             None,
-        );
+        )
+        .unwrap();
         assert_eq!(res2.unwrap().source_profile_id, 1);
 
         // At T=30, p1 expires (inclusive) but p2 activates (inclusive). p2.id > p1.id, so p2 wins.
@@ -558,7 +566,8 @@ mod tests {
             start_time + Duration::minutes(30),
             None,
             None,
-        );
+        )
+        .unwrap();
         assert_eq!(res3.unwrap().source_profile_id, 2);
 
         // At T=31, p1 is definitely invalid
@@ -567,7 +576,8 @@ mod tests {
             start_time + Duration::minutes(31),
             None,
             None,
-        );
+        )
+        .unwrap();
         assert_eq!(res4.unwrap().source_profile_id, 2);
     }
 
@@ -588,7 +598,7 @@ mod tests {
             ChargingRateUnit::Watts,
         );
 
-        let result = Executor::resolve(vec![p1], current_time, None, None);
+        let result = Executor::resolve(vec![p1], current_time, None, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
