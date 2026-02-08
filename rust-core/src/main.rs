@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut engine = Engine::new(config.start_time, config.seed, config.evse_count);
 
     // Setup output files if provided
-    let mut ocpp_tracer = if let Some(path) = config.ocpp_trace_path {
+    let ocpp_tracer = if let Some(path) = config.ocpp_trace_path {
         Some(Tracer::new(BufWriter::new(File::create(path)?)))
     } else {
         None
