@@ -175,7 +175,7 @@ pub fn validate_meter_values(req: &MeterValuesRequest) -> Result<(), ValidationE
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use chrono::{TimeZone, Utc};
 
     #[test]
     fn test_validate_set_charging_profile_valid() {
@@ -255,7 +255,7 @@ mod tests {
     fn test_validate_transaction_event_started_while_faulted() {
         let req = TransactionEventRequest {
             event_type: TransactionEventEnum::Started,
-            timestamp: Utc::now(),
+            timestamp: Utc.timestamp_opt(100, 0).unwrap(),
             trigger_reason: TriggerReasonEnum::CablePluggedIn,
             seq_no: 1,
             transaction_info: Transaction {

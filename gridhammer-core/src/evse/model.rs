@@ -326,7 +326,7 @@ mod tests {
         };
 
         let mut evse = Evse::new(1);
-        let now = Utc::now();
+        let now = Utc.timestamp_opt(100, 0).unwrap();
 
         // No profiles initially
         evse.tick_transaction(now).unwrap();

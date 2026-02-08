@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn test_invariants() {
         let mut tm = TransactionManager::new();
-        let ts = Utc::now();
+        let ts = Utc.timestamp_opt(100, 0).unwrap();
 
         // Cannot update or stop if no tx
         assert!(tm

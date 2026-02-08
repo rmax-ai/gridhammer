@@ -61,7 +61,7 @@ impl<W: Write> Tracer<W> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
+    use chrono::{TimeZone, Utc};
 
     #[test]
     fn test_trace_evse_state() {
@@ -70,7 +70,7 @@ mod tests {
 
         let record = EvseStateRecord {
             tick: 1,
-            timestamp: Utc::now().to_rfc3339(),
+            timestamp: Utc.timestamp_opt(100, 0).unwrap().to_rfc3339(),
             evse_id: 101,
             state: EvseState::Charging,
             active_transaction_id: Some("tx1".to_string()),
@@ -101,7 +101,7 @@ mod tests {
 
         let record = OcppTraceRecord {
             tick: 42,
-            timestamp: Utc::now().to_rfc3339(),
+            timestamp: Utc.timestamp_opt(100, 0).unwrap().to_rfc3339(),
             direction: Direction::Outbound,
             action: "BootNotification".to_string(),
             payload,
