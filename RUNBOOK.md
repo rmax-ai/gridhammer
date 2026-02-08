@@ -14,10 +14,10 @@ Run these commands to verify the build:
 
 ### Rust Core
 ```bash
-cd rust-core
-cargo fmt -- --check
-cargo clippy -- -D warnings
-cargo test
+# Run from repository root
+cargo fmt --all -- --check
+cargo clippy --workspace -- -D warnings
+cargo test --workspace
 ```
 
 ### TypeScript Shell

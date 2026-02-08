@@ -7,10 +7,10 @@ test: test-core test-shell
 
 # Rust Core
 test-core:
-	@echo "=== Testing Rust Core ==="
-	cd rust-core && cargo fmt -- --check
-	cd rust-core && cargo clippy -- -D warnings
-	cd rust-core && cargo test
+	@echo "=== Testing Rust Workspace ==="
+	cargo fmt --all -- --check
+	cargo clippy --workspace -- -D warnings
+	cargo test --workspace
 
 # TypeScript Shell
 test-shell:
@@ -20,10 +20,11 @@ test-shell:
 
 # Lint all
 lint:
-	cd rust-core && cargo fmt -- --check && cargo clippy -- -D warnings
+	cargo fmt --all -- --check
+	cargo clippy --workspace -- -D warnings
 	cd ts-shell && npm run lint
 
 # Clean all
 clean:
-	cd rust-core && cargo clean
+	cargo clean
 	cd ts-shell && rm -rf dist node_modules
