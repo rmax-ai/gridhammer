@@ -100,6 +100,63 @@ impl Evse {
                     .stop_transaction()
                     .map_err(|e| e.to_string())?;
             }
+            EvseEvent::PauseEV
+            | EvseEvent::PauseEVSE
+            | EvseEvent::ResumeCharging
+            | EvseEvent::Fault => {
+                // Transaction continues, but state changes.
+                if let Some(current_tx) = &self.transaction_manager.current_transaction {
+                    let transaction_id = current_tx.transaction_id.clone();
+                    let start_timestamp = current_tx.start_timestamp;
+                    // Update the transaction sequence number
+                    self.transaction_manager
+                        .update_transaction()
+                        .map_err(|e| e.to_string())?;
+                    let seq_no = self
+                        .transaction_manager
+                        .current_transaction
+                        .as_ref()
+                        .unwrap()
+                        .seq_no;
+
+                    let charging_state = match new_state {
+                        EvseState::Charging => ChargingStateEnum::Charging,
+                        EvseState::SuspendedEV => ChargingStateEnum::SuspendedEV,
+                        EvseState::SuspendedEVSE => ChargingStateEnum::SuspendedEVSE,
+                        EvseState::Faulted => ChargingStateEnum::SuspendedEVSE, // Map Faulted to SuspendedEVSE for Tx updates
+                        _ => ChargingStateEnum::Idle,
+                    };
+
+                    let reason = match event {
+                        EvseEvent::PauseEV
+                        | EvseEvent::PauseEVSE
+                        | EvseEvent::ResumeCharging
+                        | EvseEvent::Fault => TriggerReasonEnum::ChargingStateChanged,
+                        _ => TriggerReasonEnum::Trigger,
+                    };
+
+                    // Emit TransactionEvent(Updated)
+                    tx_event_req = Some(TransactionEventRequest {
+                        event_type: TransactionEventEnum::Updated,
+                        timestamp,
+                        trigger_reason: reason,
+                        seq_no,
+                        transaction_info: Transaction {
+                            transaction_id,
+                            charging_state: Some(charging_state),
+                            time_spent_charging: Some(
+                                (timestamp.timestamp() - start_timestamp) as i32,
+                            ),
+                            stopped_reason: None,
+                            remote_start_id: None,
+                        },
+                        evse: Some(EVSE {
+                            id: self.id as i32,
+                            connector_id: Some(1),
+                        }),
+                    });
+                }
+            }
             // For updates, we might need a separate trigger or assume periodic updates
             // But here we are handling discrete events.
             _ => {}
@@ -176,5 +233,61 @@ mod tests {
         assert!(evse
             .handle_event(EvseEvent::StartCharging, ts, None)
             .is_err());
+    }
+
+    #[test]
+    fn test_transaction_update_lifecycle() {
+        let mut evse = Evse::new(1);
+        let ts_start = Utc.timestamp_opt(100, 0).unwrap();
+
+        // PlugIn -> Preparing
+        evse.handle_event(EvseEvent::PlugIn, ts_start, None)
+            .unwrap();
+
+        // Start Transaction
+        evse.handle_event(EvseEvent::StartCharging, ts_start, Some("tx1".to_string()))
+            .unwrap();
+
+        // Update 1: PauseEV -> SuspendedEV
+        let ts_update1 = Utc.timestamp_opt(110, 0).unwrap();
+        let (state, tx_req) = evse
+            .handle_event(EvseEvent::PauseEV, ts_update1, None)
+            .unwrap();
+        assert_eq!(state, EvseState::SuspendedEV);
+        let req = tx_req.unwrap();
+        assert_eq!(req.event_type, TransactionEventEnum::Updated);
+        assert_eq!(
+            req.transaction_info.charging_state,
+            Some(ChargingStateEnum::SuspendedEV)
+        );
+        assert_eq!(req.seq_no, 1);
+
+        // Update 2: ResumeCharging -> Charging
+        let ts_update2 = Utc.timestamp_opt(120, 0).unwrap();
+        let (state, tx_req) = evse
+            .handle_event(EvseEvent::ResumeCharging, ts_update2, None)
+            .unwrap();
+        assert_eq!(state, EvseState::Charging);
+        let req = tx_req.unwrap();
+        assert_eq!(req.event_type, TransactionEventEnum::Updated);
+        assert_eq!(
+            req.transaction_info.charging_state,
+            Some(ChargingStateEnum::Charging)
+        );
+        assert_eq!(req.seq_no, 2);
+
+        // Update 3: Fault -> Faulted
+        let ts_update3 = Utc.timestamp_opt(130, 0).unwrap();
+        let (state, tx_req) = evse
+            .handle_event(EvseEvent::Fault, ts_update3, None)
+            .unwrap();
+        assert_eq!(state, EvseState::Faulted);
+        let req = tx_req.unwrap();
+        assert_eq!(req.event_type, TransactionEventEnum::Updated);
+        assert_eq!(
+            req.transaction_info.charging_state,
+            Some(ChargingStateEnum::SuspendedEVSE)
+        ); // Mapped
+        assert_eq!(req.seq_no, 3);
     }
 }

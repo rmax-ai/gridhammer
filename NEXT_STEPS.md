@@ -18,7 +18,7 @@ Do not parallelize across layers prematurely.
   * Add compile-time exhaustiveness checks
   * No ChargingProfiles yet
 
-- [ ] **TransactionEvent lifecycle (NOW)**
+- [x] **TransactionEvent lifecycle (Done)**
   * Implement Started / Updated / Ended
   * Encode invariant checks
     * no orphan transactions
@@ -26,8 +26,11 @@ Do not parallelize across layers prematurely.
 
 ## Next up (queued)
 
-- [ ] **Artifact emission (minimal)**
-- [ ] **Phase 2 — ChargingProfile executor**
+- [ ] **CLI v0 (NOW)**
+  * `gridhammer run <scenario>`
+  * `gridhammer replay <run-id>`
+  * `gridhammer validate <scenario>`
+
 
 
 ---
