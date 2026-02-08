@@ -12,20 +12,28 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **CLI v0 (NOW)**
-  * `gridhammer run <scenario>`
-  * `gridhammer replay <run-id>`
-  * `gridhammer validate <scenario>`
+- [ ] **TransactionEvent lifecycle (NOW)**
+   * Implement Started / Updated / Ended
+   * Encode invariant checks:
+     * no orphan transactions
+     * no double-ended transactions
 
 ## Next up (queued)
 
+- [ ] **Artifact emission (minimal)**
+   * `evse_states.jsonl`
+   * Deterministic ordering
+
+- [ ] **CLI v0**
+   * `gridhammer run <scenario>`
+   * `gridhammer replay <run-id>`
+   * `gridhammer validate <scenario>`
+
 - [ ] **Experiment registry**
-  * Scenario hash
-  * Seed
-  * Core version
-  * Artifact paths
-
-
+   * Scenario hash
+   * Seed
+   * Core version
+   * Artifact paths
 
 ---
 
@@ -34,9 +42,7 @@ Do not parallelize across layers prematurely.
 **Goal:** Make it impossible to build the wrong thing.
 
 - [x] **Freeze contracts (Done, Verified clean 2026-02-07)**
-
    * Finalize:
-
      * `ARCHITECTURE.md`
      * `DECISIONS.md`
      * `AGENTS.md`
@@ -46,7 +52,6 @@ Do not parallelize across layers prematurely.
    * **CPMS runtime logic references removed (Confirmed 0 matches).**
 
 - [x] **Create repo skeleton (Done)**
-
    ```
    gridhammer/
      rust-core/
@@ -54,11 +59,9 @@ Do not parallelize across layers prematurely.
      scenarios/
      docs/
    ```
-
    No implementation yet.
 
 - [x] **Add forbidden-scope checklist (Done, Verified 2026-02-07)**
-
    * CPMS runtime logic
    * Pricing / OCPI
    * Gateway heuristics
@@ -71,37 +74,30 @@ Do not parallelize across layers prematurely.
 **Goal:** Establish protocol truth and determinism.
 
 - [x] **Rust crate bootstrapping (Done)**
-
    * Create `gridhammer-core`
    * Enforce:
-
      * no wall-clock time
      * injected clock
      * seeded RNG
      * no async in core logic
 
 - [x] **EVSE FSM v0 (Done)**
-
    * Define EVSE states as enums
    * Encode legal transitions exhaustively
    * Add compile-time exhaustiveness checks
    * No ChargingProfiles yet
 
-- [x] **TransactionEvent lifecycle (Done)**
-
+- [ ] **TransactionEvent lifecycle (NOW)**
    * Implement Started / Updated / Ended
    * Encode invariant checks:
-
      * no orphan transactions
      * no double-ended transactions
 
-- [x] **Artifact emission (minimal) (Done)**
-
+- [ ] **Artifact emission (minimal)**
    * `evse_states.jsonl`
    * Deterministic ordering
 
 **Exit criteria**
-
 * FSM tests pass
 * Replay test yields identical output
 
@@ -112,31 +108,26 @@ Do not parallelize across layers prematurely.
 **Goal:** Build the heart of GridHammer.
 
 - [x] **ChargingProfile model (Done)**
-
    * TxProfile
    * StationMaxProfile
    * Time-based resolution
 
 - [x] **Conflict resolution rules (Done)**
-
    * Explicit priority order
    * Deterministic tie-breaking
    * Zero-power semantics
 
 - [x] **Executor invariants (Done, Verified 2026-02-07)**
-
    * Every enforced limit has a reason
    * No silent clamping
    * No negative or NaN values
 
 - [x] **Property tests (Done)**
-
    * Overlapping profiles
    * Profile churn
    * Zero-power suspend
 
 **Exit criteria**
-
 * Executor is pure and deterministic
 * 100% unit-test coverage for executor logic
 
@@ -147,27 +138,22 @@ Do not parallelize across layers prematurely.
 **Goal:** Simulate grid pressure without simulating physics.
 
 - [x] **Site topology model (Done)**
-
    * Transformer cap
    * Feeder groups
    * EVSE membership
 
 - [x] **Projection logic (Done)**
-
    * Site constraint → EVSE-level effects
    * Expressed only as:
-
      * ChargingProfile updates
      * SuspendedEVSE
      * Faulted
 
 - [x] **Failure propagation (Done)**
-
    * One EVSE fault affecting site cap
    * Deterministic ordering
 
 **Exit criteria**
-
 * Site logic never bypasses OCPP semantics
 * Projection is explainable per tick
 
@@ -178,7 +164,6 @@ Do not parallelize across layers prematurely.
 **Goal:** Make the protocol surface undeniable.
 
 - [x] **Message models (Done)**
-
    * BootNotification
    * StatusNotification
    * TransactionEvent
@@ -186,19 +171,16 @@ Do not parallelize across layers prematurely.
    * SetChargingProfile
 
 - [x] **Semantic validation (Done)**
-
    * Required fields
    * State-dependent legality
    * Message ordering invariants
 
 - [x] **Trace output (Done)**
-
    * `ocpp_trace.jsonl`
    * Stable ordering
    * Stable timestamps (tick-based)
 
 **Exit criteria**
-
 * Traces replay identically
 * Invalid sequences are rejected loudly
 
@@ -209,13 +191,11 @@ Do not parallelize across layers prematurely.
 **Goal:** Operate GridHammer without touching core logic.
 
 - [x] **Scenario schema (Done)**
-
    * YAML/JSON
    * Versioned
    * Validated via Zod
 
-- [ ] **CLI v0 (NOW)**
-
+- [ ] **CLI v0**
    ```
    gridhammer run <scenario>
    gridhammer replay <run-id>
@@ -223,14 +203,12 @@ Do not parallelize across layers prematurely.
    ```
 
 - [ ] **Experiment registry**
-
    * Scenario hash
    * Seed
    * Core version
    * Artifact paths
 
 **Exit criteria**
-
 * CLI can run and replay a scenario end-to-end
 * Registry is append-only
 
@@ -241,7 +219,6 @@ Do not parallelize across layers prematurely.
 **Goal:** Prove GridHammer finds real bugs.
 
 - [ ] **Golden MCS scenarios**
-
    * Peak arrival wave
    * Ramp-rate stress
    * Zero-power suspend
@@ -249,16 +226,13 @@ Do not parallelize across layers prematurely.
    * Site curtailment
 
 - [ ] **Assertions**
-
    * Explicit failure expectations
    * No “manual inspection only” tests
 
 - [ ] **Replay certification**
-
    * Run → replay → diff must be empty
 
 **Exit criteria**
-
 * At least one scenario fails a known-buggy CPMS
 * Failure is explainable from artifacts alone
 
@@ -269,13 +243,11 @@ Do not parallelize across layers prematurely.
 **Goal:** Human insight without semantic power.
 
 - [ ] **Read-only UI**
-
    * EVSE timelines
    * Profile diffs
    * Power curves
 
 - [ ] **Diff view**
-
    * Run vs run
    * Before vs after CPMS change
 
@@ -306,4 +278,3 @@ GridHammer is “ready” when:
 ---
 
 > “The hard part is not building the system — it is building the discipline to not lie to yourself.”
-

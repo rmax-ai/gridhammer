@@ -100,10 +100,41 @@ impl Evse {
                     .stop_transaction()
                     .map_err(|e| e.to_string())?;
             }
-            EvseEvent::PauseEV
-            | EvseEvent::PauseEVSE
-            | EvseEvent::ResumeCharging
-            | EvseEvent::Fault => {
+            EvseEvent::Fault => {
+                // Fault ends the transaction per invariant:
+                // Charging -> Faulted must emit TransactionEvent(Ended, reason=Error)
+                if let Some(current_tx) = &self.transaction_manager.current_transaction {
+                    let tx_id = current_tx.transaction_id.clone();
+                    let seq_no = current_tx.seq_no + 1;
+
+                    // Emit TransactionEvent(Ended)
+                    tx_event_req = Some(TransactionEventRequest {
+                        event_type: TransactionEventEnum::Ended,
+                        timestamp,
+                        trigger_reason: TriggerReasonEnum::ChargingStateChanged,
+                        seq_no,
+                        transaction_info: Transaction {
+                            transaction_id: tx_id,
+                            charging_state: Some(ChargingStateEnum::SuspendedEVSE), // Fault implies suspension/end
+                            time_spent_charging: Some(
+                                (timestamp.timestamp() - current_tx.start_timestamp) as i32,
+                            ),
+                            stopped_reason: Some("Fault".to_string()),
+                            remote_start_id: None,
+                        },
+                        evse: Some(EVSE {
+                            id: self.id as i32,
+                            connector_id: Some(1),
+                        }),
+                    });
+                }
+
+                // Stop Transaction
+                self.transaction_manager
+                    .stop_transaction()
+                    .map_err(|e| e.to_string())?;
+            }
+            EvseEvent::PauseEV | EvseEvent::PauseEVSE | EvseEvent::ResumeCharging => {
                 // Transaction continues, but state changes.
                 if let Some(current_tx) = &self.transaction_manager.current_transaction {
                     let transaction_id = current_tx.transaction_id.clone();
@@ -123,15 +154,13 @@ impl Evse {
                         EvseState::Charging => ChargingStateEnum::Charging,
                         EvseState::SuspendedEV => ChargingStateEnum::SuspendedEV,
                         EvseState::SuspendedEVSE => ChargingStateEnum::SuspendedEVSE,
-                        EvseState::Faulted => ChargingStateEnum::SuspendedEVSE, // Map Faulted to SuspendedEVSE for Tx updates
                         _ => ChargingStateEnum::Idle,
                     };
 
                     let reason = match event {
-                        EvseEvent::PauseEV
-                        | EvseEvent::PauseEVSE
-                        | EvseEvent::ResumeCharging
-                        | EvseEvent::Fault => TriggerReasonEnum::ChargingStateChanged,
+                        EvseEvent::PauseEV | EvseEvent::PauseEVSE | EvseEvent::ResumeCharging => {
+                            TriggerReasonEnum::ChargingStateChanged
+                        }
                         _ => TriggerReasonEnum::Trigger,
                     };
 
@@ -276,18 +305,25 @@ mod tests {
         );
         assert_eq!(req.seq_no, 2);
 
-        // Update 3: Fault -> Faulted
+        // Update 3: Fault -> Faulted (Ends Tx)
         let ts_update3 = Utc.timestamp_opt(130, 0).unwrap();
         let (state, tx_req) = evse
             .handle_event(EvseEvent::Fault, ts_update3, None)
             .unwrap();
         assert_eq!(state, EvseState::Faulted);
         let req = tx_req.unwrap();
-        assert_eq!(req.event_type, TransactionEventEnum::Updated);
+        assert_eq!(req.event_type, TransactionEventEnum::Ended);
         assert_eq!(
             req.transaction_info.charging_state,
             Some(ChargingStateEnum::SuspendedEVSE)
-        ); // Mapped
+        );
+        assert_eq!(
+            req.transaction_info.stopped_reason,
+            Some("Fault".to_string())
+        );
         assert_eq!(req.seq_no, 3);
+
+        // Transaction should be cleared
+        assert!(evse.transaction_manager.current_transaction.is_none());
     }
 }
