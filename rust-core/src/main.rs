@@ -42,12 +42,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(tracer) = &mut evse_tracer {
             let tick = engine.tick_count();
             let timestamp = engine.clock().now().to_rfc3339();
-            for (i, state) in engine.evses().iter().enumerate() {
+            for (i, evse) in engine.evses().iter().enumerate() {
                 let record = EvseStateRecord {
                     tick,
                     timestamp: timestamp.clone(),
                     evse_id: (i + 1) as u32,
-                    state: *state,
+                    state: evse.state,
                 };
                 tracer.trace_evse_state(&record)?;
             }

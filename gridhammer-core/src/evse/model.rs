@@ -1,6 +1,11 @@
 use super::fsm::transition;
 use super::state::{EvseEvent, EvseState};
 use super::transaction::TransactionManager;
+use crate::ocpp::messages::{
+    ChargingStateEnum, Transaction, TransactionEventEnum, TransactionEventRequest,
+    TriggerReasonEnum, EVSE,
+};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -22,26 +27,74 @@ impl Evse {
     pub fn handle_event(
         &mut self,
         event: EvseEvent,
-        timestamp: i64,
+        timestamp: DateTime<Utc>,
         transaction_id: Option<String>,
-    ) -> Result<EvseState, String> {
+    ) -> Result<(EvseState, Option<TransactionEventRequest>), String> {
         // 1. Check FSM transition
         let new_state = transition(self.state, event).map_err(|e| e.to_string())?;
 
         // 2. Handle Transaction Lifecycle based on event/state change
+        let mut tx_event_req = None;
+
         match event {
             EvseEvent::StartCharging => {
                 // Transitioning to Charging. Start Transaction.
                 // We require a transaction_id for this event.
-                if let Some(tx_id) = transaction_id {
+                if let Some(tx_id) = transaction_id.clone() {
                     self.transaction_manager
-                        .start_transaction(tx_id, timestamp)
+                        .start_transaction(tx_id.clone(), timestamp.timestamp())
                         .map_err(|e| e.to_string())?;
+
+                    // Emit TransactionEvent(Started)
+                    tx_event_req = Some(TransactionEventRequest {
+                        event_type: TransactionEventEnum::Started,
+                        timestamp,
+                        trigger_reason: TriggerReasonEnum::RemoteStart, // Defaulting for now
+                        seq_no: 0,
+                        transaction_info: Transaction {
+                            transaction_id: tx_id,
+                            charging_state: Some(ChargingStateEnum::Charging),
+                            time_spent_charging: Some(0),
+                            stopped_reason: None,
+                            remote_start_id: None,
+                        },
+                        evse: Some(EVSE {
+                            id: self.id as i32,
+                            connector_id: Some(1),
+                        }),
+                    });
                 } else {
                     return Err("StartCharging event requires a transaction_id".to_string());
                 }
             }
             EvseEvent::StopCharging => {
+                // Capture current tx info before stopping
+                if let Some(current_tx) = &self.transaction_manager.current_transaction {
+                    let tx_id = current_tx.transaction_id.clone();
+                    let seq_no = current_tx.seq_no + 1; // Increment for the final event
+
+                    // Emit TransactionEvent(Ended)
+                    tx_event_req = Some(TransactionEventRequest {
+                        event_type: TransactionEventEnum::Ended,
+                        timestamp,
+                        trigger_reason: TriggerReasonEnum::RemoteStop, // Defaulting
+                        seq_no,
+                        transaction_info: Transaction {
+                            transaction_id: tx_id,
+                            charging_state: Some(ChargingStateEnum::Idle), // Stopped
+                            time_spent_charging: Some(
+                                (timestamp.timestamp() - current_tx.start_timestamp) as i32,
+                            ),
+                            stopped_reason: Some("RemoteStop".to_string()),
+                            remote_start_id: None,
+                        },
+                        evse: Some(EVSE {
+                            id: self.id as i32,
+                            connector_id: Some(1),
+                        }),
+                    });
+                }
+
                 // Transitioning from Charging/Suspended to Available. Stop Transaction.
                 self.transaction_manager
                     .stop_transaction()
@@ -54,7 +107,7 @@ impl Evse {
 
         // 3. Update state
         self.state = new_state;
-        Ok(new_state)
+        Ok((new_state, tx_event_req))
     }
 
     pub fn tick_transaction(&mut self) -> Result<(), String> {
@@ -74,51 +127,54 @@ impl Evse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::TimeZone;
 
     #[test]
     fn test_evse_start_stop_transaction() {
         let mut evse = Evse::new(1);
+        let ts = Utc.timestamp_opt(100, 0).unwrap();
 
         // PlugIn -> Preparing
-        assert_eq!(
-            evse.handle_event(EvseEvent::PlugIn, 100, None).unwrap(),
-            EvseState::Preparing
-        );
+        let (state, tx_req) = evse.handle_event(EvseEvent::PlugIn, ts, None).unwrap();
+        assert_eq!(state, EvseState::Preparing);
+        assert!(tx_req.is_none());
         assert!(evse.transaction_manager.current_transaction.is_none());
 
         // StartCharging -> Charging (Starts Tx)
-        assert_eq!(
-            evse.handle_event(EvseEvent::StartCharging, 110, Some("tx1".to_string()))
-                .unwrap(),
-            EvseState::Charging
-        );
+        let ts_start = Utc.timestamp_opt(110, 0).unwrap();
+        let (state, tx_req) = evse
+            .handle_event(EvseEvent::StartCharging, ts_start, Some("tx1".to_string()))
+            .unwrap();
+        assert_eq!(state, EvseState::Charging);
         assert!(evse.transaction_manager.current_transaction.is_some());
-        assert_eq!(
-            evse.transaction_manager
-                .current_transaction
-                .as_ref()
-                .unwrap()
-                .transaction_id,
-            "tx1"
-        );
+
+        let req = tx_req.unwrap();
+        assert_eq!(req.event_type, TransactionEventEnum::Started);
+        assert_eq!(req.transaction_info.transaction_id, "tx1");
 
         // StopCharging -> Available (Stops Tx)
-        assert_eq!(
-            evse.handle_event(EvseEvent::StopCharging, 120, None)
-                .unwrap(),
-            EvseState::Available
-        );
+        let ts_stop = Utc.timestamp_opt(120, 0).unwrap();
+        let (state, tx_req) = evse
+            .handle_event(EvseEvent::StopCharging, ts_stop, None)
+            .unwrap();
+        assert_eq!(state, EvseState::Available);
         assert!(evse.transaction_manager.current_transaction.is_none());
+
+        let req = tx_req.unwrap();
+        assert_eq!(req.event_type, TransactionEventEnum::Ended);
+        assert_eq!(req.transaction_info.transaction_id, "tx1");
+        assert_eq!(req.transaction_info.time_spent_charging, Some(10)); // 120 - 110
     }
 
     #[test]
     fn test_missing_tx_id_error() {
         let mut evse = Evse::new(1);
-        evse.handle_event(EvseEvent::PlugIn, 100, None).unwrap();
+        let ts = Utc.timestamp_opt(100, 0).unwrap();
+        evse.handle_event(EvseEvent::PlugIn, ts, None).unwrap();
 
         // StartCharging without tx_id should fail
         assert!(evse
-            .handle_event(EvseEvent::StartCharging, 110, None)
+            .handle_event(EvseEvent::StartCharging, ts, None)
             .is_err());
     }
 }

@@ -2,26 +2,32 @@ use chrono::{DateTime, Utc};
 
 use super::clock::Clock;
 use super::rng::Rng;
-use crate::evse::state::EvseState;
+use crate::evse::model::Evse;
 
 pub struct Engine {
     clock: Clock,
     #[allow(dead_code)]
     rng: Rng,
-    evses: Vec<EvseState>,
+    evses: Vec<Evse>,
 }
 
 impl Engine {
     pub fn new(start: DateTime<Utc>, seed: u64, evse_count: usize) -> Self {
+        let mut evses = Vec::with_capacity(evse_count);
+        for i in 0..evse_count {
+            evses.push(Evse::new((i + 1) as u32));
+        }
+
         Self {
             clock: Clock::new(start),
             rng: Rng::new(seed),
-            evses: vec![EvseState::Available; evse_count],
+            evses,
         }
     }
 
     pub fn tick(&mut self) {
         self.clock.tick();
+        // TODO: In the future, we will process events here or trigger Evse::tick_transaction
     }
 
     pub fn clock(&self) -> &Clock {
@@ -32,7 +38,7 @@ impl Engine {
         self.evses.len()
     }
 
-    pub fn evses(&self) -> &[EvseState] {
+    pub fn evses(&self) -> &[Evse] {
         &self.evses
     }
 

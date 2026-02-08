@@ -12,11 +12,11 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Phase 1 — TransactionEvent lifecycle (NOW)** (details in Phase 1)
+- [ ] **Phase 5 — CLI v0 (NOW)** (details in Phase 5)
 
 ## Next up (queued)
 
-- [ ] **Phase 5 — CLI v0 (NOW)** (details in Phase 5)
+- [ ] **Wire up OCPP event tracing** (New task to connect Engine events to Tracer)
 
 ---
 
@@ -78,7 +78,7 @@ Do not parallelize across layers prematurely.
    * Add compile-time exhaustiveness checks
    * No ChargingProfiles yet
 
-- [ ] **TransactionEvent lifecycle (NOW)**
+- [x] **TransactionEvent lifecycle (Done)**
 
    * Implement Started / Updated / Ended
    * Encode invariant checks:
