@@ -12,18 +12,15 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **CLI v0 (NOW)**
-   * `gridhammer run <scenario>`
-   * `gridhammer replay <run-id>`
-   * `gridhammer validate <scenario>`
-
-## Next up (queued)
-
-- [ ] **Experiment registry**
+- [ ] **Experiment registry (NOW)**
    * Scenario hash
    * Seed
    * Core version
    * Artifact paths
+
+## Next up (queued)
+
+- [ ] **Golden MCS scenarios**
 
 ---
 
@@ -185,7 +182,7 @@ Do not parallelize across layers prematurely.
    * Versioned
    * Validated via Zod
 
-- [ ] **CLI v0**
+- [x] **CLI v0 (Done)**
    ```
    gridhammer run <scenario>
    gridhammer replay <run-id>

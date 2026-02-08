@@ -1,0 +1,21 @@
+metadata:
+  version: "1.0"
+  name: "Basic Test Scenario"
+  description: "A simple scenario with 2 EVSEs"
+site:
+  transformer_capacity_kw: 1000
+  evses:
+    - id: "1"
+      max_power_kw: 350
+      connector_type: "MCS"
+    - id: "2"
+      max_power_kw: 350
+      connector_type: "MCS"
+events:
+  arrivals:
+    - tick: 10
+      evse_id: "1"
+      vehicle_id: "v1"
+      requested_energy_kwh: 100
+  power_requests: []
+  faults: []

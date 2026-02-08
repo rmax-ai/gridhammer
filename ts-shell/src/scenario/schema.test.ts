@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ScenarioSchema } from './schema';
+import { ScenarioSchema } from './schema.js';
 
 describe('ScenarioSchema', () => {
   it('validates a sample scenario', () => {
