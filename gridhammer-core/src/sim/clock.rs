@@ -1,26 +1,26 @@
 use chrono::{DateTime, Duration, Utc};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Clock {
-    start: DateTime<Utc>,
-    ticks: u64,
+    start_time: DateTime<Utc>,
+    tick_count: u64,
+    tick_duration: Duration,
 }
 
 impl Clock {
     pub fn new(start: DateTime<Utc>) -> Self {
-        Clock { start, ticks: 0 }
+        Self {
+            start_time: start,
+            tick_count: 0,
+            tick_duration: Duration::seconds(1),
+        }
     }
 
     pub fn tick(&mut self) {
-        self.ticks += 1;
+        self.tick_count += 1;
     }
 
     pub fn now(&self) -> DateTime<Utc> {
-        self.start + Duration::seconds(self.ticks as i64)
-    }
-
-    pub fn ticks(&self) -> u64 {
-        self.ticks
+        self.start_time + self.tick_duration * self.tick_count as i32
     }
 }
