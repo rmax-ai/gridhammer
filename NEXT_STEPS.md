@@ -12,17 +12,11 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [x] **Phase 1 — EVSE FSM v0 (Done)**
-  * Define EVSE states as enums
-  * Encode legal transitions exhaustively
-  * Add compile-time exhaustiveness checks
-  * No ChargingProfiles yet
-
-- [x] **TransactionEvent lifecycle (Done)**
-  * Implement Started / Updated / Ended
-  * Encode invariant checks
-    * no orphan transactions
-    * no double-ended transactions
+- [x] **Phase 1 — EVSE FSM v0 (Refinement) (Done)**
+  * [x] Define EVSE states as enums
+  * [x] Encode legal transitions exhaustively
+  * [x] Ensure strict compile-time exhaustiveness (remove wildcards)
+  * [x] No ChargingProfiles yet
 
 ## Next up (queued)
 

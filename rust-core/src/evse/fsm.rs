@@ -22,19 +22,73 @@ pub fn try_transition(state: EvseState, event: EvseEvent) -> Result<EvseState, T
     use EvseState::*;
 
     match (state, event) {
+        // Available state transitions
         (Available, Reserve) => Ok(Reserved),
         (Available, StartCharging) => Ok(Occupied),
         (Available, Fault) => Ok(Faulted),
         (Available, SetUnavailable) => Ok(Unavailable),
+        (Available, CancelReservation) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Available, StopCharging) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Available, SetAvailable) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Available, ClearFault) => Err(TransitionError::InvalidTransition { from: state, event }),
+
+        // Reserved state transitions
         (Reserved, CancelReservation) => Ok(Available),
         (Reserved, StartCharging) => Ok(Occupied),
         (Reserved, Fault) => Ok(Faulted),
+        (Reserved, Reserve) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Reserved, StopCharging) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Reserved, SetUnavailable) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Reserved, SetAvailable) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Reserved, ClearFault) => Err(TransitionError::InvalidTransition { from: state, event }),
+
+        // Occupied state transitions
         (Occupied, StopCharging) => Ok(Available),
         (Occupied, Fault) => Ok(Faulted),
+        (Occupied, Reserve) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Occupied, CancelReservation) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Occupied, StartCharging) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Occupied, SetUnavailable) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Occupied, SetAvailable) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Occupied, ClearFault) => Err(TransitionError::InvalidTransition { from: state, event }),
+
+        // Unavailable state transitions
         (Unavailable, SetAvailable) => Ok(Available),
         (Unavailable, Fault) => Ok(Faulted),
+        (Unavailable, Reserve) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Unavailable, CancelReservation) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Unavailable, StartCharging) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Unavailable, StopCharging) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Unavailable, SetUnavailable) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Unavailable, ClearFault) => Err(TransitionError::InvalidTransition { from: state, event }),
+
+        // Faulted state transitions
         (Faulted, ClearFault) => Ok(Available),
-        _ => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Faulted, Reserve) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Faulted, CancelReservation) => {
+            Err(TransitionError::InvalidTransition { from: state, event })
+        }
+        (Faulted, StartCharging) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Faulted, StopCharging) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Faulted, SetUnavailable) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Faulted, SetAvailable) => Err(TransitionError::InvalidTransition { from: state, event }),
+        (Faulted, Fault) => Err(TransitionError::InvalidTransition { from: state, event }),
     }
 }
 
