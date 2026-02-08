@@ -12,15 +12,16 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Experiment registry (NOW)**
-   * Scenario hash
-   * Seed
-   * Core version
-   * Artifact paths
+- [ ] **Golden MCS scenarios (NOW)**
+   * Peak arrival wave
+   * Ramp-rate stress
+   * Zero-power suspend
+   * Mid-session fault
+   * Site curtailment
 
 ## Next up (queued)
 
-- [ ] **Golden MCS scenarios**
+- [ ] **Assertions**
 
 ---
 
@@ -189,7 +190,7 @@ Do not parallelize across layers prematurely.
    gridhammer validate <scenario>
    ```
 
-- [ ] **Experiment registry**
+- [x] **Experiment registry**
    * Scenario hash
    * Seed
    * Core version
