@@ -204,5 +204,44 @@ mod tests {
                 }
             }
         }
+
+        #[test]
+        fn tx_default_and_station_max_interaction(
+            default_profile in arb_charging_profile(),
+            station_max in arb_charging_profile(),
+            current_time in arb_datetime(),
+            transaction_start in arb_datetime_option()
+        ) {
+            // Setup: TxDefault and StationMax only
+            let mut p1 = default_profile;
+            p1.charging_profile_purpose = ChargingProfilePurpose::TxDefaultProfile;
+            p1.valid_from = None;
+            p1.valid_to = None;
+            // Ensure distinct IDs
+            p1.id = 1;
+
+            let mut p2 = station_max;
+            p2.charging_profile_purpose = ChargingProfilePurpose::ChargingStationMaxProfile;
+            p2.valid_from = None;
+            p2.valid_to = None;
+            p2.id = 2;
+            // Ensure same units for simple comparison
+            p2.charging_schedule.charging_rate_unit = p1.charging_schedule.charging_rate_unit.clone();
+
+
+            let profiles = vec![p1.clone(), p2.clone()];
+            let result = Executor::resolve(profiles, current_time, transaction_start, None);
+
+            if let Ok(Some(enforced)) = result {
+                 // The source must be one of the two
+                 prop_assert!(enforced.source_profile_id == 1 || enforced.source_profile_id == 2);
+
+                 if enforced.reason == crate::profiles::executor::EnforcementReason::ProfileLimit {
+                     prop_assert_eq!(enforced.source_profile_id, 1);
+                 } else if enforced.reason == crate::profiles::executor::EnforcementReason::StationLimit {
+                     prop_assert_eq!(enforced.source_profile_id, 2);
+                 }
+            }
+        }
     }
 }

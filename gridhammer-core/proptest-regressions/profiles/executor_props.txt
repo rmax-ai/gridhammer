@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 3b41b1dbdd817ad2116e4331ce07a8358865f1abe532565a1258df46f65df23b # shrinks to default_profile = ChargingProfile { id: 0, stack_level: 0, charging_profile_purpose: ChargingStationMaxProfile, charging_profile_kind: Absolute, recurrency_kind: None, valid_from: None, valid_to: None, charging_schedule: ChargingSchedule { id: 0, start_schedule: None, duration: None, charging_rate_unit: Watts, charging_schedule_period: [], min_charging_rate: None } }, station_max = ChargingProfile { id: 0, stack_level: 0, charging_profile_purpose: ChargingStationMaxProfile, charging_profile_kind: Absolute, recurrency_kind: None, valid_from: None, valid_to: None, charging_schedule: ChargingSchedule { id: 0, start_schedule: None, duration: None, charging_rate_unit: Watts, charging_schedule_period: [], min_charging_rate: None } }, current_time = 2020-01-01T00:00:00Z, transaction_start = None
