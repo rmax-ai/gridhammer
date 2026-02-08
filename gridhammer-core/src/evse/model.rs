@@ -154,17 +154,13 @@ impl Evse {
             .current_transaction
             .as_ref()
             .map(|tx| tx.start_timestamp);
-        let transaction_id = self
-            .transaction_manager
-            .current_transaction
-            .as_ref()
-            .map(|tx| tx.transaction_id.clone());
 
         let limit = Executor::resolve(
             self.charging_profiles.clone(),
             current_time,
+            10000.0, // dummy requested_power
+            10000.0, // dummy site_caps
             transaction_start,
-            transaction_id,
         )
         .map_err(|e| e.to_string())?;
 
@@ -364,6 +360,5 @@ mod tests {
 
         let limit = evse.current_limit.expect("Should have a limit");
         assert_eq!(limit.limit, 5000.0);
-        assert_eq!(limit.source_profile_id, 1);
     }
 }

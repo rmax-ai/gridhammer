@@ -16,15 +16,14 @@ pub enum EnforcementReason {
 pub struct EnforcedLimit {
     pub limit: f64,
     pub unit: ChargingRateUnit,
-    pub source_profile_id: i32,
     pub reason: EnforcementReason,
     pub should_suspend: bool,
 }
 
 #[derive(Debug, thiserror::Error, PartialEq)]
 pub enum ExecutorError {
-    #[error("Limit is NaN for profile {0}")]
-    LimitIsNan(i32),
+    #[error("Limit is NaN")]
+    LimitIsNan,
 }
 
 pub struct Executor;
@@ -33,8 +32,9 @@ impl Executor {
     pub fn resolve(
         profiles: Vec<ChargingProfile>,
         current_time: DateTime<Utc>,
+        requested_power: f64,
+        site_caps: f64,
         transaction_start: Option<DateTime<Utc>>,
-        _transaction_id: Option<String>,
     ) -> Result<Option<EnforcedLimit>, ExecutorError> {
         // Filter valid profiles
         let valid_profiles: Vec<ChargingProfile> = profiles
@@ -84,13 +84,12 @@ impl Executor {
 
         // Combine: min of planned and limit
         let result = match (planned, limit) {
-            (Some((p_val, p_unit, p_id)), Some((l_val, l_unit, l_id))) => {
+            (Some((p_val, p_unit, _)), Some((l_val, l_unit, _))) => {
                 if p_unit == l_unit {
                     if p_val < l_val {
                         Some(EnforcedLimit {
                             limit: p_val,
                             unit: p_unit,
-                            source_profile_id: p_id,
                             reason: EnforcementReason::ProfileLimit,
                             should_suspend: false,
                         })
@@ -98,73 +97,68 @@ impl Executor {
                         Some(EnforcedLimit {
                             limit: l_val,
                             unit: l_unit,
-                            source_profile_id: l_id,
                             reason: EnforcementReason::StationLimit,
                             should_suspend: false,
                         })
                     }
                 } else {
-                    // Fallback: If units differ
                     // Special case: Zero Power Semantics.
-                    // If one limit implies suspension (<= 0), it is stricter than any positive limit regardless of unit.
                     if p_val <= 0.0 {
                         Some(EnforcedLimit {
                             limit: p_val,
                             unit: p_unit,
-                            source_profile_id: p_id,
                             reason: EnforcementReason::ProfileLimit,
-                            should_suspend: false, // Will be set to true by invariant check
+                            should_suspend: false,
                         })
                     } else if l_val <= 0.0 {
                         Some(EnforcedLimit {
                             limit: l_val,
                             unit: l_unit,
-                            source_profile_id: l_id,
                             reason: EnforcementReason::StationLimit,
-                            should_suspend: false, // Will be set to true by invariant check
+                            should_suspend: false,
                         })
                     } else {
-                        // If units differ and neither is zero, prefer StationMax as safety net
+                        // Prefer StationMax as safety net
                         Some(EnforcedLimit {
                             limit: l_val,
                             unit: l_unit,
-                            source_profile_id: l_id,
                             reason: EnforcementReason::StationLimit,
                             should_suspend: false,
                         })
                     }
                 }
             }
-            (Some((p_val, p_unit, p_id)), None) => Some(EnforcedLimit {
+            (Some((p_val, p_unit, _)), None) => Some(EnforcedLimit {
                 limit: p_val,
                 unit: p_unit,
-                source_profile_id: p_id,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             }),
-            (None, Some((l_val, l_unit, l_id))) => Some(EnforcedLimit {
+            (None, Some((l_val, l_unit, _))) => Some(EnforcedLimit {
                 limit: l_val,
                 unit: l_unit,
-                source_profile_id: l_id,
                 reason: EnforcementReason::StationLimit,
                 should_suspend: false,
             }),
-            (None, None) => None, // unlimited
+            (None, None) => None,
         };
 
-        // Enforce invariants: No negative, No NaN, Zero Power Semantics
-        if let Some(mut enforced) = result {
-            if enforced.limit.is_nan() {
-                return Err(ExecutorError::LimitIsNan(enforced.source_profile_id));
+        // Apply requested_power and site_caps
+        let final_enforced = if let Some(mut e) = result {
+            if e.limit.is_nan() {
+                return Err(ExecutorError::LimitIsNan);
             }
+            e.limit = e.limit.min(requested_power).min(site_caps);
+            Some(e)
+        } else {
+            None
+        };
+
+        // Enforce invariants
+        if let Some(mut enforced) = final_enforced {
             if enforced.limit <= 0.0 {
-                // Zero or negative power implies suspension
                 enforced.limit = 0.0;
                 enforced.should_suspend = true;
-                // If it was negative, we might want to flag it, but for now we clamp and suspend.
-                if enforced.limit < 0.0 {
-                    // logic already clamped to 0.0 above
-                }
             }
             Ok(Some(enforced))
         } else {
@@ -276,13 +270,12 @@ mod tests {
                 ChargingRateUnit::Watts,
             ),
         ];
-        let result = Executor::resolve(profiles, current_time, None, None).unwrap();
+        let result = Executor::resolve(profiles, current_time, 10000.0, 10000.0, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 2,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             })
@@ -310,20 +303,21 @@ mod tests {
         );
         profile.valid_from = valid_from;
         profile.valid_to = valid_to;
-        let result = Executor::resolve(vec![profile.clone()], current_time, None, None).unwrap();
+        let result =
+            Executor::resolve(vec![profile.clone()], current_time, 10000.0, 10000.0, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 1000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             })
         );
 
         profile.valid_to = invalid_to;
-        let result = Executor::resolve(vec![profile], current_time, None, None).unwrap();
+        let result =
+            Executor::resolve(vec![profile], current_time, 10000.0, 10000.0, None).unwrap();
         assert_eq!(result, None);
     }
 
@@ -352,13 +346,13 @@ mod tests {
             ChargingRateUnit::Watts,
         );
         profile.recurrency_kind = Some(RecurrencyKind::Daily);
-        let result = Executor::resolve(vec![profile], current_time, None, None).unwrap();
+        let result =
+            Executor::resolve(vec![profile], current_time, 10000.0, 10000.0, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             })
@@ -389,14 +383,19 @@ mod tests {
             None,
             ChargingRateUnit::Watts,
         );
-        let result =
-            Executor::resolve(vec![profile], current_time, transaction_start, None).unwrap();
+        let result = Executor::resolve(
+            vec![profile],
+            current_time,
+            10000.0,
+            10000.0,
+            transaction_start,
+        )
+        .unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             })
@@ -432,14 +431,19 @@ mod tests {
             Some(current_time),
             ChargingRateUnit::Watts,
         );
-        let result =
-            Executor::resolve(vec![tx_profile, max_profile], current_time, None, None).unwrap();
+        let result = Executor::resolve(
+            vec![tx_profile, max_profile],
+            current_time,
+            10000.0,
+            10000.0,
+            None,
+        )
+        .unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 2,
                 reason: EnforcementReason::StationLimit,
                 should_suspend: false,
             })
@@ -462,14 +466,14 @@ mod tests {
             Some(current_time),
             ChargingRateUnit::Watts,
         );
-        let result = Executor::resolve(vec![profile], current_time, None, None).unwrap();
+        let result =
+            Executor::resolve(vec![profile], current_time, 10000.0, 10000.0, None).unwrap();
         // Should be clamped to 0.0, but still attributed to ID 1
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 0.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: true,
             })
@@ -492,8 +496,8 @@ mod tests {
             Some(current_time),
             ChargingRateUnit::Watts,
         );
-        let result = Executor::resolve(vec![profile], current_time, None, None);
-        assert_eq!(result, Err(ExecutorError::LimitIsNan(1)));
+        let result = Executor::resolve(vec![profile], current_time, 10000.0, 10000.0, None);
+        assert_eq!(result, Err(ExecutorError::LimitIsNan));
     }
 
     #[test]
@@ -543,28 +547,38 @@ mod tests {
         );
 
         // p2 beats p1 (stack level)
-        let result =
-            Executor::resolve(vec![p1.clone(), p2.clone()], current_time, None, None).unwrap();
+        let result = Executor::resolve(
+            vec![p1.clone(), p2.clone()],
+            current_time,
+            10000.0,
+            10000.0,
+            None,
+        )
+        .unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 2,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             })
         );
 
         // p3 beats p2 (same stack level, higher ID)
-        let result =
-            Executor::resolve(vec![p2.clone(), p3.clone()], current_time, None, None).unwrap();
+        let result = Executor::resolve(
+            vec![p2.clone(), p3.clone()],
+            current_time,
+            10000.0,
+            10000.0,
+            None,
+        )
+        .unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 3000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 3,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             })
@@ -609,38 +623,41 @@ mod tests {
         let profiles = vec![p1, p2];
 
         // At T=0, p1 is active
-        let res1 = Executor::resolve(profiles.clone(), start_time, None, None).unwrap();
-        assert_eq!(res1.unwrap().source_profile_id, 1);
+        let res1 = Executor::resolve(profiles.clone(), start_time, 10000.0, 10000.0, None).unwrap();
+        assert_eq!(res1.unwrap().limit, 1000.0);
 
         // At T=29, p1 is still active
         let res2 = Executor::resolve(
             profiles.clone(),
             start_time + Duration::minutes(29),
-            None,
+            10000.0,
+            10000.0,
             None,
         )
         .unwrap();
-        assert_eq!(res2.unwrap().source_profile_id, 1);
+        assert_eq!(res2.unwrap().limit, 1000.0);
 
         // At T=30, p1 expires (inclusive) but p2 activates (inclusive). p2.id > p1.id, so p2 wins.
         let res3 = Executor::resolve(
             profiles.clone(),
             start_time + Duration::minutes(30),
-            None,
+            10000.0,
+            10000.0,
             None,
         )
         .unwrap();
-        assert_eq!(res3.unwrap().source_profile_id, 2);
+        assert_eq!(res3.unwrap().limit, 2000.0);
 
         // At T=31, p1 is definitely invalid
         let res4 = Executor::resolve(
             profiles.clone(),
             start_time + Duration::minutes(31),
-            None,
+            10000.0,
+            10000.0,
             None,
         )
         .unwrap();
-        assert_eq!(res4.unwrap().source_profile_id, 2);
+        assert_eq!(res4.unwrap().limit, 2000.0);
     }
 
     #[test]
@@ -660,13 +677,12 @@ mod tests {
             ChargingRateUnit::Watts,
         );
 
-        let result = Executor::resolve(vec![p1], current_time, None, None).unwrap();
+        let result = Executor::resolve(vec![p1], current_time, 10000.0, 10000.0, None).unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 0.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: true,
             })
@@ -707,8 +723,14 @@ mod tests {
             ChargingRateUnit::Watts,
         );
 
-        let result =
-            Executor::resolve(vec![tx_profile, max_profile], current_time, None, None).unwrap();
+        let result = Executor::resolve(
+            vec![tx_profile, max_profile],
+            current_time,
+            10000.0,
+            10000.0,
+            None,
+        )
+        .unwrap();
 
         // We EXPECT it to respect 0.0 Amps (Suspend)
         assert_eq!(
@@ -716,7 +738,6 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 0.0,
                 unit: ChargingRateUnit::Amperes,
-                source_profile_id: 1,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: true,
             })
@@ -743,14 +764,19 @@ mod tests {
         );
 
         // Case 1: Only Default Profile
-        let result =
-            Executor::resolve(vec![default_profile.clone()], current_time, None, None).unwrap();
+        let result = Executor::resolve(
+            vec![default_profile.clone()],
+            current_time,
+            10000.0,
+            10000.0,
+            None,
+        )
+        .unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 5000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             })
@@ -771,14 +797,19 @@ mod tests {
             ChargingRateUnit::Watts,
         );
 
-        let result =
-            Executor::resolve(vec![default_profile, tx_profile], current_time, None, None).unwrap();
+        let result = Executor::resolve(
+            vec![default_profile, tx_profile],
+            current_time,
+            10000.0,
+            10000.0,
+            None,
+        )
+        .unwrap();
         assert_eq!(
             result,
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 2,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: false,
             })
