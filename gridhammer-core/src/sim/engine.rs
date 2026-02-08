@@ -4,6 +4,7 @@ use super::clock::Clock;
 use super::rng::Rng;
 use crate::evse::model::Evse;
 use crate::evse::state::EvseEvent;
+use crate::invariants::assertions::AssertionRegistry;
 use crate::ocpp::messages::TransactionEventRequest;
 
 pub struct Engine {
@@ -12,6 +13,7 @@ pub struct Engine {
     rng: Rng,
     evses: Vec<Evse>,
     messages: Vec<TransactionEventRequest>,
+    assertions: AssertionRegistry,
 }
 
 impl Engine {
@@ -26,6 +28,7 @@ impl Engine {
             rng: Rng::new(seed),
             evses,
             messages: Vec::new(),
+            assertions: AssertionRegistry::new(),
         }
     }
 
@@ -67,6 +70,10 @@ impl Engine {
 
     pub fn evses(&self) -> &[Evse] {
         &self.evses
+    }
+
+    pub fn assertions(&self) -> &AssertionRegistry {
+        &self.assertions
     }
 
     pub fn tick_count(&self) -> u64 {

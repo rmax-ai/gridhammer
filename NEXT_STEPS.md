@@ -12,13 +12,12 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Assertions (NOW)**
-   * Explicit failure expectations
-   * No “manual inspection only” tests
+- [ ] **Replay certification (NOW)**
+   * Run → replay → diff must be empty
 
 ## Next up (queued)
 
-- [ ] **Replay certification**
+- [ ] **Read-only UI**
 
 ---
 
@@ -210,8 +209,7 @@ Do not parallelize across layers prematurely.
    * Mid-session fault
    * Site curtailment
 
-- [ ] **Assertions**
-
+- [x] **Assertions (Done)**
    * Explicit failure expectations
    * No “manual inspection only” tests
 
