@@ -1,13 +1,12 @@
 use chrono::{DateTime, Utc};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
 
 use super::clock::Clock;
+use super::rng::Rng;
 
 pub struct Engine {
     clock: Clock,
     #[allow(dead_code)]
-    rng: StdRng,
+    rng: Rng,
     evse_count: usize,
 }
 
@@ -15,7 +14,7 @@ impl Engine {
     pub fn new(start: DateTime<Utc>, seed: u64, evse_count: usize) -> Self {
         Self {
             clock: Clock::new(start),
-            rng: StdRng::seed_from_u64(seed),
+            rng: Rng::new(seed),
             evse_count,
         }
     }
