@@ -28,7 +28,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make it impossible to build the wrong thing.
 
-- [x] **Freeze contracts (Done, Re-verified 2026-02-08: Reconciled docs, explicitly forbade CPMS runtime behavior in AGENTS.md)**
+- [x] **Freeze contracts (Done, Re-verified 2026-02-08: Reconciled docs, verified 0 CPMS logic references)**
    * Finalize:
      * `ARCHITECTURE.md`
      * `DECISIONS.md`
@@ -37,6 +37,7 @@ Do not parallelize across layers prematurely.
    * Steward-agent reviews for internal consistency.
    * Any contradiction must be resolved before code.
    * **CPMS runtime logic references removed (Confirmed 0 matches).**
+   * **AGENTS.md explicit prohibitions verified.**
 
 - [x] **Create repo skeleton (Done)**
    ```
