@@ -171,6 +171,21 @@ The `Executor` is a pure function. `Evse` logic depends on this output for all p
 
 ---
 
+## Decision 12: No ISO-15118 PLC Simulation
+
+**Decision**
+GridHammer will not simulate low-level ISO-15118 Power Line Communication (PLC) timing, signal modulation, or SLAC.
+
+**Rationale**
+*   **Focus on Application Layer**: GridHammer targets OCPP 2.1 application layer logic and state transitions.
+*   **Complexity**: PLC simulation requires specialized PHY-layer modeling that distracts from protocol stress testing.
+*   **Abstraction**: We assume the EV-EVSE communication link is functional if the session exists.
+
+**Consequence**
+No `plc-agent` or low-level signal processing. Authentication and authorization happen at the OCPP level.
+
+---
+
 ## Reconsideration policy
 
 Decisions here change only if:

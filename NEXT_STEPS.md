@@ -27,7 +27,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make it impossible to build the wrong thing.
 
-- [x] **Freeze contracts (Done, Re-verified 2026-02-08: No CPMS logic found, AGENTS.md reinforced)**
+- [x] **Freeze contracts (Done, Re-verified 2026-02-08: Added Decision 12 (PLC), AGENTS.md reinforced)**
    * Finalize:
      * `ARCHITECTURE.md`
      * `DECISIONS.md`
