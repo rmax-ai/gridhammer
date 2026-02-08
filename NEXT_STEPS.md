@@ -27,7 +27,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make it impossible to build the wrong thing.
 
-- [x] **Freeze contracts (Done, Re-verified 2026-02-08: Checked ARCHITECTURE/MANIFEST/DECISIONS/AGENTS/RUNBOOK, confirmed no CPMS logic in repo)**
+- [x] **Freeze contracts (Done, Re-verified 2026-02-08: Reconciled docs, explicitly forbade CPMS runtime behavior in AGENTS.md)**
    * Finalize:
      * `ARCHITECTURE.md`
      * `DECISIONS.md`

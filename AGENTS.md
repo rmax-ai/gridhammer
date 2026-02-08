@@ -23,7 +23,7 @@ The orchestration layer is defined in LOOP_PROMPT.md and loop.sh.
 
 Make GridHammer a **deterministic, protocol-correct**, and **production-caliber** OCPP 2.1 stress test platform for Megawatt Charging Systems.
 
-Agents optimize within their service ownership and **never expand scope** or invent behavior outside the listed requirements. **CPMS runtime logic is strictly forbidden. No exceptions.**
+Agents optimize within their service ownership and **never expand scope** or invent behavior outside the listed requirements. **CPMS runtime logic and behavior is strictly forbidden. No exceptions.**
 
 ---
 
