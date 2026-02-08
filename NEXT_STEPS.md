@@ -12,7 +12,7 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Phase 1 — EVSE FSM v0 (NOW)** (details in Phase 1)
+- [ ] **Phase 1 — TransactionEvent lifecycle (NOW)** (details in Phase 1)
 
 ## Next up (queued)
 
@@ -71,14 +71,14 @@ Do not parallelize across layers prematurely.
      * seeded RNG
      * no async in core logic
 
-- [ ] **EVSE FSM v0 (NOW)**
+- [x] **EVSE FSM v0 (Done)**
 
    * Define EVSE states as enums
    * Encode legal transitions exhaustively
    * Add compile-time exhaustiveness checks
    * No ChargingProfiles yet
 
-- [ ] **TransactionEvent lifecycle**
+- [ ] **TransactionEvent lifecycle (NOW)**
 
    * Implement Started / Updated / Ended
    * Encode invariant checks:
