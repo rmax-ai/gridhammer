@@ -148,7 +148,18 @@ impl Executor {
             if e.limit.is_nan() {
                 return Err(ExecutorError::LimitIsNan);
             }
-            e.limit = e.limit.min(requested_power).min(site_caps);
+
+            // Check if site_caps overrides the profile/station limit
+            if site_caps < e.limit {
+                e.limit = site_caps;
+                e.reason = EnforcementReason::InternalConstraint;
+            }
+
+            // Clamp to requested power (demand)
+            // Note: We do not change the reason here because satisfying demand
+            // is not an "enforcement" action in the same sense as a grid constraint.
+            e.limit = e.limit.min(requested_power);
+
             Some(e)
         } else {
             None
@@ -811,6 +822,44 @@ mod tests {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
                 reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
+            })
+        );
+    }
+
+    #[test]
+    fn test_site_cap_override() {
+        let current_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
+        let profile = create_profile(
+            1,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 10000.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+
+        // Profile allows 10kW, but Site Cap is 5kW
+        let result = Executor::resolve(
+            vec![profile],
+            current_time,
+            20000.0, // Requested
+            5000.0,  // Site Cap
+            None,
+        )
+        .unwrap();
+
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 5000.0,
+                unit: ChargingRateUnit::Watts,
+                reason: EnforcementReason::InternalConstraint,
                 should_suspend: false,
             })
         );

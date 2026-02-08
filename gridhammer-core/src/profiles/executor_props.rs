@@ -183,7 +183,7 @@ mod tests {
              let profiles = vec![p1.clone(), p2.clone()];
              let result = Executor::resolve(profiles, current_time, 10000.0, 10000.0, transaction_start);
 
-             if let Ok(Some(enforced)) = result {
+             if let Ok(Some(_enforced)) = result {
                  // Since p2 has higher stack_level, it should be selected
              }
         }
