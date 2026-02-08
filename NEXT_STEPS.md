@@ -13,8 +13,9 @@ Do not parallelize across layers prematurely.
 ## Current task in progress
 
 - [ ] **Read-only UI (NOW)**
-   * EVSE timelines
-   * Profile diffs
+   - [x] Scaffold Vite app
+   - [ ] EVSE timelines
+   - [ ] Profile diffs
 
 ## Next up (queued)
 
