@@ -1,2 +1,10 @@
 #!/bin/sh
-exec zig cc "$@"
+# Find zig binary in mise installs, ignoring errors
+ZIG=$(find "$HOME/.local/share/mise/installs/zig" -name zig -type f -executable 2>/dev/null | head -n 1)
+
+if [ -z "$ZIG" ]; then
+  echo "scripts/cc: zig not found" >&2
+  exit 1
+fi
+
+exec "$ZIG" cc "$@"
