@@ -104,14 +104,35 @@ impl Executor {
                         })
                     }
                 } else {
-                    // Fallback: If units differ, prefer StationMax as safety net
-                    Some(EnforcedLimit {
-                        limit: l_val,
-                        unit: l_unit,
-                        source_profile_id: l_id,
-                        reason: EnforcementReason::StationLimit,
-                        should_suspend: false,
-                    })
+                    // Fallback: If units differ
+                    // Special case: Zero Power Semantics.
+                    // If one limit implies suspension (<= 0), it is stricter than any positive limit regardless of unit.
+                    if p_val <= 0.0 {
+                        Some(EnforcedLimit {
+                            limit: p_val,
+                            unit: p_unit,
+                            source_profile_id: p_id,
+                            reason: EnforcementReason::ProfileLimit,
+                            should_suspend: false, // Will be set to true by invariant check
+                        })
+                    } else if l_val <= 0.0 {
+                        Some(EnforcedLimit {
+                            limit: l_val,
+                            unit: l_unit,
+                            source_profile_id: l_id,
+                            reason: EnforcementReason::StationLimit,
+                            should_suspend: false, // Will be set to true by invariant check
+                        })
+                    } else {
+                        // If units differ and neither is zero, prefer StationMax as safety net
+                        Some(EnforcedLimit {
+                            limit: l_val,
+                            unit: l_unit,
+                            source_profile_id: l_id,
+                            reason: EnforcementReason::StationLimit,
+                            should_suspend: false,
+                        })
+                    }
                 }
             }
             (Some((p_val, p_unit, p_id)), None) => Some(EnforcedLimit {
@@ -645,6 +666,56 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 0.0,
                 unit: ChargingRateUnit::Watts,
+                source_profile_id: 1,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: true,
+            })
+        );
+    }
+
+    #[test]
+    fn test_unit_mismatch_zero_logic() {
+        let current_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
+
+        // TxProfile says STOP (0 Amps)
+        let tx_profile = create_profile(
+            1,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 0.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Amperes,
+        );
+
+        // StationMax says 10kW
+        let max_profile = create_profile(
+            2,
+            1,
+            ChargingProfilePurpose::ChargingStationMaxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 10000.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+
+        let result =
+            Executor::resolve(vec![tx_profile, max_profile], current_time, None, None).unwrap();
+
+        // We EXPECT it to respect 0.0 Amps (Suspend)
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 0.0,
+                unit: ChargingRateUnit::Amperes,
                 source_profile_id: 1,
                 reason: EnforcementReason::ProfileLimit,
                 should_suspend: true,
