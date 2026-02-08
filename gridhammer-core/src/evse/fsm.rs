@@ -98,13 +98,13 @@ pub fn transition(state: EvseState, event: EvseEvent) -> Result<EvseState, Trans
         EvseState::SuspendedEV => match event {
             EvseEvent::ResumeCharging => Ok(EvseState::Charging),
             EvseEvent::StopCharging => Ok(EvseState::Available),
+            EvseEvent::PauseEVSE => Ok(EvseState::SuspendedEVSE),
             EvseEvent::Fault => Ok(EvseState::Faulted),
             // Explicitly list illegal events
             EvseEvent::PlugIn
             | EvseEvent::Unplug
             | EvseEvent::StartCharging
             | EvseEvent::PauseEV
-            | EvseEvent::PauseEVSE
             | EvseEvent::ClearFault
             | EvseEvent::SetUnavailable
             | EvseEvent::SetAvailable
@@ -265,6 +265,14 @@ mod tests {
             Ok(EvseState::Faulted)
         );
         assert!(transition(EvseState::SuspendedEV, EvseEvent::PauseEV).is_err());
+    }
+
+    #[test]
+    fn test_suspended_ev_to_suspended_evse() {
+        assert_eq!(
+            transition(EvseState::SuspendedEV, EvseEvent::PauseEVSE),
+            Ok(EvseState::SuspendedEVSE)
+        );
     }
 
     #[test]
