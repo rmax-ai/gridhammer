@@ -2,8 +2,7 @@ use super::fsm::transition;
 use super::state::{EvseEvent, EvseState};
 use super::transaction::TransactionManager;
 use crate::ocpp::messages::{
-    ChargingStateEnum, Transaction, TransactionEventEnum, TransactionEventRequest,
-    TriggerReasonEnum, EVSE,
+    ChargingStateEnum, TransactionEventEnum, TransactionEventRequest, TriggerReasonEnum,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -40,116 +39,54 @@ impl Evse {
             EvseEvent::StartCharging => {
                 // Transitioning to Charging. Start Transaction.
                 // We require a transaction_id for this event.
-                if let Some(tx_id) = transaction_id.clone() {
-                    self.transaction_manager
-                        .start_transaction(tx_id.clone(), timestamp.timestamp())
+                if let Some(tx_id) = transaction_id {
+                    let req = self
+                        .transaction_manager
+                        .start_transaction(
+                            tx_id,
+                            timestamp,
+                            self.id as i32,
+                            TriggerReasonEnum::RemoteStart, // Defaulting for now
+                        )
                         .map_err(|e| e.to_string())?;
 
-                    // Emit TransactionEvent(Started)
-                    tx_event_req = Some(TransactionEventRequest {
-                        event_type: TransactionEventEnum::Started,
-                        timestamp,
-                        trigger_reason: TriggerReasonEnum::RemoteStart, // Defaulting for now
-                        seq_no: 0,
-                        transaction_info: Transaction {
-                            transaction_id: tx_id,
-                            charging_state: Some(ChargingStateEnum::Charging),
-                            time_spent_charging: Some(0),
-                            stopped_reason: None,
-                            remote_start_id: None,
-                        },
-                        evse: Some(EVSE {
-                            id: self.id as i32,
-                            connector_id: Some(1),
-                        }),
-                    });
+                    tx_event_req = Some(req);
                 } else {
                     return Err("StartCharging event requires a transaction_id".to_string());
                 }
             }
             EvseEvent::StopCharging => {
-                // Capture current tx info before stopping
-                if let Some(current_tx) = &self.transaction_manager.current_transaction {
-                    let tx_id = current_tx.transaction_id.clone();
-                    let seq_no = current_tx.seq_no + 1; // Increment for the final event
-
-                    // Emit TransactionEvent(Ended)
-                    tx_event_req = Some(TransactionEventRequest {
-                        event_type: TransactionEventEnum::Ended,
-                        timestamp,
-                        trigger_reason: TriggerReasonEnum::RemoteStop, // Defaulting
-                        seq_no,
-                        transaction_info: Transaction {
-                            transaction_id: tx_id,
-                            charging_state: Some(ChargingStateEnum::Idle), // Stopped
-                            time_spent_charging: Some(
-                                (timestamp.timestamp() - current_tx.start_timestamp) as i32,
-                            ),
-                            stopped_reason: Some("RemoteStop".to_string()),
-                            remote_start_id: None,
-                        },
-                        evse: Some(EVSE {
-                            id: self.id as i32,
-                            connector_id: Some(1),
-                        }),
-                    });
-                }
-
                 // Transitioning from Charging/Suspended to Available. Stop Transaction.
-                self.transaction_manager
-                    .stop_transaction()
+                let req = self
+                    .transaction_manager
+                    .stop_transaction(
+                        timestamp,
+                        self.id as i32,
+                        TriggerReasonEnum::RemoteStop,
+                        Some("RemoteStop".to_string()),
+                    )
                     .map_err(|e| e.to_string())?;
+                tx_event_req = Some(req);
             }
             EvseEvent::Fault => {
                 // Fault ends the transaction per invariant:
                 // Charging -> Faulted must emit TransactionEvent(Ended, reason=Error)
-                if let Some(current_tx) = &self.transaction_manager.current_transaction {
-                    let tx_id = current_tx.transaction_id.clone();
-                    let seq_no = current_tx.seq_no + 1;
-
-                    // Emit TransactionEvent(Ended)
-                    tx_event_req = Some(TransactionEventRequest {
-                        event_type: TransactionEventEnum::Ended,
-                        timestamp,
-                        trigger_reason: TriggerReasonEnum::ChargingStateChanged,
-                        seq_no,
-                        transaction_info: Transaction {
-                            transaction_id: tx_id,
-                            charging_state: Some(ChargingStateEnum::SuspendedEVSE), // Fault implies suspension/end
-                            time_spent_charging: Some(
-                                (timestamp.timestamp() - current_tx.start_timestamp) as i32,
-                            ),
-                            stopped_reason: Some("Fault".to_string()),
-                            remote_start_id: None,
-                        },
-                        evse: Some(EVSE {
-                            id: self.id as i32,
-                            connector_id: Some(1),
-                        }),
-                    });
+                if self.transaction_manager.current_transaction.is_some() {
+                    let req = self
+                        .transaction_manager
+                        .stop_transaction(
+                            timestamp,
+                            self.id as i32,
+                            TriggerReasonEnum::ChargingStateChanged,
+                            Some("Fault".to_string()),
+                        )
+                        .map_err(|e| e.to_string())?;
+                    tx_event_req = Some(req);
                 }
-
-                // Stop Transaction
-                self.transaction_manager
-                    .stop_transaction()
-                    .map_err(|e| e.to_string())?;
             }
             EvseEvent::PauseEV | EvseEvent::PauseEVSE | EvseEvent::ResumeCharging => {
                 // Transaction continues, but state changes.
-                if let Some(current_tx) = &self.transaction_manager.current_transaction {
-                    let transaction_id = current_tx.transaction_id.clone();
-                    let start_timestamp = current_tx.start_timestamp;
-                    // Update the transaction sequence number
-                    self.transaction_manager
-                        .update_transaction()
-                        .map_err(|e| e.to_string())?;
-                    let seq_no = self
-                        .transaction_manager
-                        .current_transaction
-                        .as_ref()
-                        .unwrap()
-                        .seq_no;
-
+                if self.transaction_manager.current_transaction.is_some() {
                     let charging_state = match new_state {
                         EvseState::Charging => ChargingStateEnum::Charging,
                         EvseState::SuspendedEV => ChargingStateEnum::SuspendedEV,
@@ -164,26 +101,11 @@ impl Evse {
                         _ => TriggerReasonEnum::Trigger,
                     };
 
-                    // Emit TransactionEvent(Updated)
-                    tx_event_req = Some(TransactionEventRequest {
-                        event_type: TransactionEventEnum::Updated,
-                        timestamp,
-                        trigger_reason: reason,
-                        seq_no,
-                        transaction_info: Transaction {
-                            transaction_id,
-                            charging_state: Some(charging_state),
-                            time_spent_charging: Some(
-                                (timestamp.timestamp() - start_timestamp) as i32,
-                            ),
-                            stopped_reason: None,
-                            remote_start_id: None,
-                        },
-                        evse: Some(EVSE {
-                            id: self.id as i32,
-                            connector_id: Some(1),
-                        }),
-                    });
+                    let req = self
+                        .transaction_manager
+                        .update_transaction(timestamp, self.id as i32, reason, charging_state)
+                        .map_err(|e| e.to_string())?;
+                    tx_event_req = Some(req);
                 }
             }
             // For updates, we might need a separate trigger or assume periodic updates
@@ -198,14 +120,7 @@ impl Evse {
 
     pub fn tick_transaction(&mut self) -> Result<(), String> {
         // This could be used to trigger periodic updates or check limits
-        // For now, maybe just update the sequence number?
-        // But TransactionManager::update_transaction() increments seq_no.
-        // We might want to call this on MeterValues trigger or periodic timer.
-        if self.transaction_manager.current_transaction.is_some() {
-            self.transaction_manager
-                .update_transaction()
-                .map_err(|e| e.to_string())?;
-        }
+        // For now, no automatic updates on tick unless required.
         Ok(())
     }
 }
@@ -213,6 +128,7 @@ impl Evse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ocpp::messages::TransactionEventEnum;
     use chrono::TimeZone;
 
     #[test]
@@ -315,7 +231,7 @@ mod tests {
         assert_eq!(req.event_type, TransactionEventEnum::Ended);
         assert_eq!(
             req.transaction_info.charging_state,
-            Some(ChargingStateEnum::SuspendedEVSE)
+            Some(ChargingStateEnum::Idle)
         );
         assert_eq!(
             req.transaction_info.stopped_reason,

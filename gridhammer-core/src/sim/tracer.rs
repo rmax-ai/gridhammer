@@ -9,6 +9,8 @@ pub struct EvseStateRecord {
     pub timestamp: String, // ISO 8601
     pub evse_id: u32,
     pub state: EvseState,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active_transaction_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -68,6 +70,7 @@ mod tests {
             timestamp: Utc::now().to_rfc3339(),
             evse_id: 101,
             state: EvseState::Charging,
+            active_transaction_id: Some("tx1".to_string()),
         };
 
         tracer.trace_evse_state(&record).unwrap();
@@ -75,6 +78,7 @@ mod tests {
         let output = String::from_utf8(buffer).unwrap();
         assert!(output.contains("\"evse_id\":101"));
         assert!(output.contains("\"state\":\"Charging\""));
+        assert!(output.contains("\"active_transaction_id\":\"tx1\""));
         assert!(output.ends_with('\n'));
     }
 
