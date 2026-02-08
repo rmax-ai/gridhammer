@@ -69,6 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     evse_id: (i + 1) as u32,
                     state: evse.state,
                     active_transaction_id,
+                    enforced_limit: evse.current_limit.clone(),
                 };
                 tracer.trace_evse_state(&record)?;
             }

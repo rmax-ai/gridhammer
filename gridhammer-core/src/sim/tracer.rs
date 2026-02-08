@@ -2,6 +2,7 @@ use serde::Serialize;
 use std::io::Write;
 
 use crate::evse::state::EvseState;
+use crate::profiles::executor::EnforcedLimit;
 
 #[derive(Debug, Serialize)]
 pub struct EvseStateRecord {
@@ -11,6 +12,8 @@ pub struct EvseStateRecord {
     pub state: EvseState,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_transaction_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enforced_limit: Option<EnforcedLimit>,
 }
 
 #[derive(Debug, Serialize)]
@@ -71,6 +74,7 @@ mod tests {
             evse_id: 101,
             state: EvseState::Charging,
             active_transaction_id: Some("tx1".to_string()),
+            enforced_limit: None,
         };
 
         tracer.trace_evse_state(&record).unwrap();
