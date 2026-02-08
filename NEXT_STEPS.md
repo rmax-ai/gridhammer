@@ -10,11 +10,28 @@ Do not parallelize across layers prematurely.
 
 ---
 
+## Current task in progress
+
+- [ ] **Phase 1 — EVSE FSM v0 (NOW)**
+   - [ ] Define EVSE states as enums
+   - [ ] Encode legal transitions exhaustively
+   - [ ] Add compile-time exhaustiveness checks
+   - [ ] No ChargingProfiles yet
+
+## Next up (queued)
+
+- [ ] **Phase 5 — CLI v0 (NOW)**
+   - [ ] `gridhammer run <scenario>`
+   - [ ] `gridhammer replay <run-id>`
+   - [ ] `gridhammer validate <scenario>`
+
+---
+
 ## Phase 0 — Ground truth locking (Done)
 
 **Goal:** Make it impossible to build the wrong thing.
 
-1. **Freeze contracts (Done, Verified clean 2026-02-07)**
+- [x] **Freeze contracts (Done, Verified clean 2026-02-07)**
 
    * Finalize:
 
@@ -26,7 +43,7 @@ Do not parallelize across layers prematurely.
    * Any contradiction must be resolved before code.
    * **CPMS runtime logic references removed (Confirmed 0 matches).**
 
-2. **Create repo skeleton (Done)**
+- [x] **Create repo skeleton (Done)**
 
    ```
    gridhammer/
@@ -38,7 +55,7 @@ Do not parallelize across layers prematurely.
 
    No implementation yet.
 
-3. **Add forbidden-scope checklist (Done, Verified 2026-02-07)**
+- [x] **Add forbidden-scope checklist (Done, Verified 2026-02-07)**
 
    * CPMS runtime logic
    * Pricing / OCPI
@@ -47,11 +64,11 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 1 — Rust core foundation (authoritative) (Done)
+## Phase 1 — Rust core foundation (authoritative)
 
 **Goal:** Establish protocol truth and determinism.
 
-1. **Rust crate bootstrapping (Done)**
+- [x] **Rust crate bootstrapping (Done)**
 
    * Create `gridhammer-core`
    * Enforce:
@@ -61,14 +78,14 @@ Do not parallelize across layers prematurely.
      * seeded RNG
      * no async in core logic
 
-2. **EVSE FSM v0 (Done)**
+- [ ] **EVSE FSM v0 (NOW)**
 
    * Define EVSE states as enums
    * Encode legal transitions exhaustively
    * Add compile-time exhaustiveness checks
    * No ChargingProfiles yet
 
-3. **TransactionEvent lifecycle (Done)**
+- [ ] **TransactionEvent lifecycle**
 
    * Implement Started / Updated / Ended
    * Encode invariant checks:
@@ -76,7 +93,7 @@ Do not parallelize across layers prematurely.
      * no orphan transactions
      * no double-ended transactions
 
-4. **Artifact emission (minimal) (Done)**
+- [x] **Artifact emission (minimal) (Done)**
 
    * `evse_states.jsonl`
    * Deterministic ordering
@@ -92,25 +109,25 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Build the heart of GridHammer.
 
-1. **ChargingProfile model (Done)**
+- [x] **ChargingProfile model (Done)**
 
    * TxProfile
    * StationMaxProfile
    * Time-based resolution
 
-2. **Conflict resolution rules (Done)**
+- [x] **Conflict resolution rules (Done)**
 
    * Explicit priority order
    * Deterministic tie-breaking
    * Zero-power semantics
 
-3. **Executor invariants (Done, Verified 2026-02-07)**
+- [x] **Executor invariants (Done, Verified 2026-02-07)**
 
    * Every enforced limit has a reason
    * No silent clamping
    * No negative or NaN values
 
-4. **Property tests (Done)**
+- [x] **Property tests (Done)**
 
    * Overlapping profiles
    * Profile churn
@@ -127,13 +144,13 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Simulate grid pressure without simulating physics.
 
-1. **Site topology model (Done)**
+- [x] **Site topology model (Done)**
 
    * Transformer cap
    * Feeder groups
    * EVSE membership
 
-2. **Projection logic (Done)**
+- [x] **Projection logic (Done)**
 
    * Site constraint → EVSE-level effects
    * Expressed only as:
@@ -142,7 +159,7 @@ Do not parallelize across layers prematurely.
      * SuspendedEVSE
      * Faulted
 
-3. **Failure propagation (Done)**
+- [x] **Failure propagation (Done)**
 
    * One EVSE fault affecting site cap
    * Deterministic ordering
@@ -158,7 +175,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make the protocol surface undeniable.
 
-1. **Message models (Done)**
+- [x] **Message models (Done)**
 
    * BootNotification
    * StatusNotification
@@ -166,37 +183,36 @@ Do not parallelize across layers prematurely.
    * MeterValues
    * SetChargingProfile
 
-2. **Semantic validation (Done)**
+- [x] **Semantic validation (Done)**
 
    * Required fields
    * State-dependent legality
    * Message ordering invariants
 
-   3. **Trace output (Done)**
+- [x] **Trace output (Done)**
 
-      * `ocpp_trace.jsonl`
-      * Stable ordering
-      * Stable timestamps (tick-based)
+   * `ocpp_trace.jsonl`
+   * Stable ordering
+   * Stable timestamps (tick-based)
 
-   **Exit criteria**
+**Exit criteria**
 
-   * Traces replay identically
-   * Invalid sequences are rejected loudly
+* Traces replay identically
+* Invalid sequences are rejected loudly
 
-   ---
+---
 
-   ## Phase 5 — TypeScript shell (control plane)
+## Phase 5 — TypeScript shell (control plane)
 
-   **Goal:** Operate GridHammer without touching core logic.
+**Goal:** Operate GridHammer without touching core logic.
 
-   1. **Scenario schema (Done)**
+- [x] **Scenario schema (Done)**
 
-      * YAML/JSON
-      * Versioned
-      * Validated via Zod
+   * YAML/JSON
+   * Versioned
+   * Validated via Zod
 
-
-2. **CLI v0 (NOW)**
+- [ ] **CLI v0 (NOW)**
 
    ```
    gridhammer run <scenario>
@@ -204,7 +220,7 @@ Do not parallelize across layers prematurely.
    gridhammer validate <scenario>
    ```
 
-3. **Experiment registry**
+- [ ] **Experiment registry**
 
    * Scenario hash
    * Seed
@@ -222,7 +238,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Prove GridHammer finds real bugs.
 
-1. **Golden MCS scenarios**
+- [ ] **Golden MCS scenarios**
 
    * Peak arrival wave
    * Ramp-rate stress
@@ -230,12 +246,12 @@ Do not parallelize across layers prematurely.
    * Mid-session fault
    * Site curtailment
 
-2. **Assertions**
+- [ ] **Assertions**
 
    * Explicit failure expectations
    * No “manual inspection only” tests
 
-3. **Replay certification**
+- [ ] **Replay certification**
 
    * Run → replay → diff must be empty
 
@@ -250,13 +266,13 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Human insight without semantic power.
 
-1. **Read-only UI**
+- [ ] **Read-only UI**
 
    * EVSE timelines
    * Profile diffs
    * Power curves
 
-2. **Diff view**
+- [ ] **Diff view**
 
    * Run vs run
    * Before vs after CPMS change
