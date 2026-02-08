@@ -12,11 +12,23 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Phase 5 — CLI v0 (NOW)** (details in Phase 5)
+- [x] **Phase 1 — EVSE FSM v0 (Done)**
+  * Define EVSE states as enums
+  * Encode legal transitions exhaustively
+  * Add compile-time exhaustiveness checks
+  * No ChargingProfiles yet
+
+- [ ] **TransactionEvent lifecycle (NOW)**
+  * Implement Started / Updated / Ended
+  * Encode invariant checks
+    * no orphan transactions
+    * no double-ended transactions
 
 ## Next up (queued)
 
-- [ ] **Wire up OCPP event tracing** (New task to connect Engine events to Tracer)
+- [ ] **Artifact emission (minimal)**
+- [ ] **Phase 2 — ChargingProfile executor**
+
 
 ---
 
