@@ -149,6 +149,7 @@ GridHammer is a **protocol stress tool**, not a CPMS implementation.
 *   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
 *   **Physics**: No battery chemistry, real power electronics, or grid physics.
 *   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
+*   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
 
 If you need these features, you are looking for a CPMS, not GridHammer.
 

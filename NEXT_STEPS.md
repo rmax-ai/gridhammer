@@ -27,7 +27,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make it impossible to build the wrong thing.
 
-- [x] **Freeze contracts (Done, Verified clean 2026-02-07)**
+- [x] **Freeze contracts (Done, Verified clean 2026-02-08)**
    * Finalize:
      * `ARCHITECTURE.md`
      * `DECISIONS.md`
@@ -47,7 +47,7 @@ Do not parallelize across layers prematurely.
    ```
    No implementation yet.
 
-- [x] **Add forbidden-scope checklist (Done, Verified 2026-02-07)**
+- [x] **Add forbidden-scope checklist (Done, Verified 2026-02-08)**
    * CPMS runtime logic
    * Pricing / OCPI
    * Gateway heuristics

@@ -83,6 +83,7 @@ Artifacts are immutable.
 * No OCPI / Roaming logic (OCHP, OICP)
 * No smart gateway logic (retry smoothing, connection holding, message buffering)
 * No physics simulation (battery chemistry, real power electronics, grid physics)
+* No ISO-15118 PLC logic (timing, signal modulation)
 
 ---
 
