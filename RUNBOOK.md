@@ -139,11 +139,10 @@ Never trust visualizations without trace confirmation.
 
 ---
 
-## Scope Safety
+## Forbidden Domain Scope
 
-GridHammer is a **protocol stress tool**, not a CPMS implementation.
+The following areas are **permanently out of scope**:
 
-**Do not:**
 *   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
 *   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
 *   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.

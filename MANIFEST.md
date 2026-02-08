@@ -78,12 +78,19 @@ Artifacts are immutable.
 * No silent protocol deviations
 * No implicit defaults
 * No hidden state
-* No UI-defined logic
-* No CPMS runtime logic (pricing, billing, invoicing, user ledgers, roaming settlement)
-* No OCPI / Roaming logic (OCHP, OICP)
-* No smart gateway logic (retry smoothing, connection holding, message buffering)
-* No physics simulation (battery chemistry, real power electronics, grid physics)
-* No ISO-15118 PLC logic (timing, signal modulation)
+
+---
+
+## Forbidden Domain Scope (Non-goals)
+
+The following areas are **permanently out of scope**:
+
+*   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
+*   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
+*   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
+*   **Physics**: No battery chemistry, real power electronics, or grid physics.
+*   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
+*   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
 
 ---
 
