@@ -30,56 +30,142 @@ pub fn transition(state: EvseState, event: EvseEvent) -> Result<EvseState, Trans
             EvseEvent::Reserve => Ok(EvseState::Reserved),
             EvseEvent::SetUnavailable => Ok(EvseState::Unavailable),
             EvseEvent::Fault => Ok(EvseState::Faulted),
-            // Illegal events
-            _ => Err(TransitionError::InvalidTransition { from: state, event }),
+            // Explicitly list illegal events for exhaustiveness
+            EvseEvent::Unplug
+            | EvseEvent::StartCharging
+            | EvseEvent::StopCharging
+            | EvseEvent::PauseEV
+            | EvseEvent::PauseEVSE
+            | EvseEvent::ResumeCharging
+            | EvseEvent::ClearFault
+            | EvseEvent::SetAvailable
+            | EvseEvent::CancelReservation => {
+                Err(TransitionError::InvalidTransition { from: state, event })
+            }
         },
         EvseState::Reserved => match event {
             EvseEvent::PlugIn => Ok(EvseState::Preparing),
             EvseEvent::CancelReservation => Ok(EvseState::Available),
             EvseEvent::SetUnavailable => Ok(EvseState::Unavailable),
             EvseEvent::Fault => Ok(EvseState::Faulted),
-            // Illegal events
-            _ => Err(TransitionError::InvalidTransition { from: state, event }),
+            // Explicitly list illegal events
+            EvseEvent::Unplug
+            | EvseEvent::StartCharging
+            | EvseEvent::StopCharging
+            | EvseEvent::PauseEV
+            | EvseEvent::PauseEVSE
+            | EvseEvent::ResumeCharging
+            | EvseEvent::ClearFault
+            | EvseEvent::SetAvailable
+            | EvseEvent::Reserve => Err(TransitionError::InvalidTransition { from: state, event }),
         },
         EvseState::Preparing => match event {
             EvseEvent::StartCharging => Ok(EvseState::Charging),
             EvseEvent::Unplug => Ok(EvseState::Available),
             EvseEvent::Fault => Ok(EvseState::Faulted),
-            // Illegal events
-            _ => Err(TransitionError::InvalidTransition { from: state, event }),
+            // Explicitly list illegal events
+            EvseEvent::PlugIn
+            | EvseEvent::StopCharging
+            | EvseEvent::PauseEV
+            | EvseEvent::PauseEVSE
+            | EvseEvent::ResumeCharging
+            | EvseEvent::ClearFault
+            | EvseEvent::SetUnavailable
+            | EvseEvent::SetAvailable
+            | EvseEvent::Reserve
+            | EvseEvent::CancelReservation => {
+                Err(TransitionError::InvalidTransition { from: state, event })
+            }
         },
         EvseState::Charging => match event {
             EvseEvent::StopCharging => Ok(EvseState::Available),
             EvseEvent::PauseEV => Ok(EvseState::SuspendedEV),
             EvseEvent::PauseEVSE => Ok(EvseState::SuspendedEVSE),
             EvseEvent::Fault => Ok(EvseState::Faulted),
-            // Illegal events
-            _ => Err(TransitionError::InvalidTransition { from: state, event }),
+            // Explicitly list illegal events
+            EvseEvent::PlugIn
+            | EvseEvent::Unplug
+            | EvseEvent::StartCharging
+            | EvseEvent::ResumeCharging
+            | EvseEvent::ClearFault
+            | EvseEvent::SetUnavailable
+            | EvseEvent::SetAvailable
+            | EvseEvent::Reserve
+            | EvseEvent::CancelReservation => {
+                Err(TransitionError::InvalidTransition { from: state, event })
+            }
         },
         EvseState::SuspendedEV => match event {
             EvseEvent::ResumeCharging => Ok(EvseState::Charging),
             EvseEvent::StopCharging => Ok(EvseState::Available),
             EvseEvent::Fault => Ok(EvseState::Faulted),
-            // Illegal events
-            _ => Err(TransitionError::InvalidTransition { from: state, event }),
+            // Explicitly list illegal events
+            EvseEvent::PlugIn
+            | EvseEvent::Unplug
+            | EvseEvent::StartCharging
+            | EvseEvent::PauseEV
+            | EvseEvent::PauseEVSE
+            | EvseEvent::ClearFault
+            | EvseEvent::SetUnavailable
+            | EvseEvent::SetAvailable
+            | EvseEvent::Reserve
+            | EvseEvent::CancelReservation => {
+                Err(TransitionError::InvalidTransition { from: state, event })
+            }
         },
         EvseState::SuspendedEVSE => match event {
             EvseEvent::ResumeCharging => Ok(EvseState::Charging),
             EvseEvent::StopCharging => Ok(EvseState::Available),
             EvseEvent::Fault => Ok(EvseState::Faulted),
-            // Illegal events
-            _ => Err(TransitionError::InvalidTransition { from: state, event }),
+            // Explicitly list illegal events
+            EvseEvent::PlugIn
+            | EvseEvent::Unplug
+            | EvseEvent::StartCharging
+            | EvseEvent::PauseEV
+            | EvseEvent::PauseEVSE
+            | EvseEvent::ClearFault
+            | EvseEvent::SetUnavailable
+            | EvseEvent::SetAvailable
+            | EvseEvent::Reserve
+            | EvseEvent::CancelReservation => {
+                Err(TransitionError::InvalidTransition { from: state, event })
+            }
         },
         EvseState::Faulted => match event {
             EvseEvent::ClearFault => Ok(EvseState::Available),
-            // Illegal events - must clear fault first
-            _ => Err(TransitionError::InvalidTransition { from: state, event }),
+            // Explicitly list illegal events - must clear fault first
+            EvseEvent::PlugIn
+            | EvseEvent::Unplug
+            | EvseEvent::StartCharging
+            | EvseEvent::StopCharging
+            | EvseEvent::PauseEV
+            | EvseEvent::PauseEVSE
+            | EvseEvent::ResumeCharging
+            | EvseEvent::Fault
+            | EvseEvent::SetUnavailable
+            | EvseEvent::SetAvailable
+            | EvseEvent::Reserve
+            | EvseEvent::CancelReservation => {
+                Err(TransitionError::InvalidTransition { from: state, event })
+            }
         },
         EvseState::Unavailable => match event {
             EvseEvent::SetAvailable => Ok(EvseState::Available),
             EvseEvent::Fault => Ok(EvseState::Faulted),
-            // Illegal events
-            _ => Err(TransitionError::InvalidTransition { from: state, event }),
+            // Explicitly list illegal events
+            EvseEvent::PlugIn
+            | EvseEvent::Unplug
+            | EvseEvent::StartCharging
+            | EvseEvent::StopCharging
+            | EvseEvent::PauseEV
+            | EvseEvent::PauseEVSE
+            | EvseEvent::ResumeCharging
+            | EvseEvent::ClearFault
+            | EvseEvent::SetUnavailable
+            | EvseEvent::Reserve
+            | EvseEvent::CancelReservation => {
+                Err(TransitionError::InvalidTransition { from: state, event })
+            }
         },
     }
 }
