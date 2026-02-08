@@ -187,5 +187,22 @@ mod tests {
                  prop_assert_eq!(enforced.source_profile_id, p2.id);
              }
         }
+
+        #[test]
+        fn zero_implies_suspend(
+            profiles in prop::collection::vec(arb_charging_profile(), 0..5),
+            current_time in arb_datetime(),
+            transaction_start in arb_datetime_option()
+        ) {
+            let result = Executor::resolve(profiles, current_time, transaction_start, None);
+            if let Ok(Some(enforced)) = result {
+                if enforced.limit == 0.0 {
+                    prop_assert!(enforced.should_suspend, "Zero limit implies should_suspend=true");
+                }
+                if enforced.should_suspend {
+                    prop_assert_eq!(enforced.limit, 0.0, "should_suspend=true implies limit=0.0");
+                }
+            }
+        }
     }
 }

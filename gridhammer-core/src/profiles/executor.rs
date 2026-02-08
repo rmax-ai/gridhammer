@@ -6,10 +6,19 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum EnforcementReason {
+    ProfileLimit,
+    StationLimit,
+    InternalConstraint,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EnforcedLimit {
     pub limit: f64,
     pub unit: ChargingRateUnit,
     pub source_profile_id: i32,
+    pub reason: EnforcementReason,
+    pub should_suspend: bool,
 }
 
 #[derive(Debug, thiserror::Error, PartialEq)]
@@ -82,12 +91,16 @@ impl Executor {
                             limit: p_val,
                             unit: p_unit,
                             source_profile_id: p_id,
+                            reason: EnforcementReason::ProfileLimit,
+                            should_suspend: false,
                         })
                     } else {
                         Some(EnforcedLimit {
                             limit: l_val,
                             unit: l_unit,
                             source_profile_id: l_id,
+                            reason: EnforcementReason::StationLimit,
+                            should_suspend: false,
                         })
                     }
                 } else {
@@ -96,6 +109,8 @@ impl Executor {
                         limit: l_val,
                         unit: l_unit,
                         source_profile_id: l_id,
+                        reason: EnforcementReason::StationLimit,
+                        should_suspend: false,
                     })
                 }
             }
@@ -103,23 +118,32 @@ impl Executor {
                 limit: p_val,
                 unit: p_unit,
                 source_profile_id: p_id,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
             }),
             (None, Some((l_val, l_unit, l_id))) => Some(EnforcedLimit {
                 limit: l_val,
                 unit: l_unit,
                 source_profile_id: l_id,
+                reason: EnforcementReason::StationLimit,
+                should_suspend: false,
             }),
             (None, None) => None, // unlimited
         };
 
-        // Enforce invariants: No negative, No NaN
+        // Enforce invariants: No negative, No NaN, Zero Power Semantics
         if let Some(mut enforced) = result {
             if enforced.limit.is_nan() {
                 return Err(ExecutorError::LimitIsNan(enforced.source_profile_id));
             }
-            if enforced.limit < 0.0 {
-                // Clamp to 0.0 but keep the source ID
+            if enforced.limit <= 0.0 {
+                // Zero or negative power implies suspension
                 enforced.limit = 0.0;
+                enforced.should_suspend = true;
+                // If it was negative, we might want to flag it, but for now we clamp and suspend.
+                if enforced.limit < 0.0 {
+                    // logic already clamped to 0.0 above
+                }
             }
             Ok(Some(enforced))
         } else {
@@ -237,7 +261,9 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 2
+                source_profile_id: 2,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
             })
         );
     }
@@ -269,7 +295,9 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 1000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1
+                source_profile_id: 1,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
             })
         );
 
@@ -309,7 +337,9 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1
+                source_profile_id: 1,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
             })
         );
     }
@@ -345,7 +375,9 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1
+                source_profile_id: 1,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
             })
         );
     }
@@ -386,7 +418,9 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 2
+                source_profile_id: 2,
+                reason: EnforcementReason::StationLimit,
+                should_suspend: false,
             })
         );
     }
@@ -414,7 +448,9 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 0.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1
+                source_profile_id: 1,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: true,
             })
         );
     }
@@ -493,7 +529,9 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 2000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 2
+                source_profile_id: 2,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
             })
         );
 
@@ -505,7 +543,9 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 3000.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 3
+                source_profile_id: 3,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
             })
         );
     }
@@ -605,7 +645,71 @@ mod tests {
             Some(EnforcedLimit {
                 limit: 0.0,
                 unit: ChargingRateUnit::Watts,
-                source_profile_id: 1
+                source_profile_id: 1,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: true,
+            })
+        );
+    }
+
+    #[test]
+    fn test_tx_default_profile_fallback() {
+        let current_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
+
+        // TxDefaultProfile
+        let default_profile = create_profile(
+            1,
+            1,
+            ChargingProfilePurpose::TxDefaultProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 5000.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+
+        // Case 1: Only Default Profile
+        let result =
+            Executor::resolve(vec![default_profile.clone()], current_time, None, None).unwrap();
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 5000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 1,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
+            })
+        );
+
+        // Case 2: TxProfile overrides Default Profile
+        let tx_profile = create_profile(
+            2,
+            1,
+            ChargingProfilePurpose::TxProfile,
+            ChargingProfileKind::Absolute,
+            vec![ChargingSchedulePeriod {
+                start_period: 0,
+                limit: 2000.0,
+                number_phases: None,
+            }],
+            Some(current_time),
+            ChargingRateUnit::Watts,
+        );
+
+        let result =
+            Executor::resolve(vec![default_profile, tx_profile], current_time, None, None).unwrap();
+        assert_eq!(
+            result,
+            Some(EnforcedLimit {
+                limit: 2000.0,
+                unit: ChargingRateUnit::Watts,
+                source_profile_id: 2,
+                reason: EnforcementReason::ProfileLimit,
+                should_suspend: false,
             })
         );
     }
