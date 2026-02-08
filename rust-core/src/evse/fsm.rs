@@ -19,20 +19,79 @@ pub enum TransitionError {
 }
 
 pub fn transition(current: EvseState, input: EvseInput) -> Result<EvseState, TransitionError> {
-    match (current, input) {
-        (EvseState::Available, EvseInput::PlugIn) => Ok(EvseState::Preparing),
-        (EvseState::Preparing, EvseInput::Unplug) => Ok(EvseState::Available),
-        (EvseState::Preparing, EvseInput::RemoteStart) => Ok(EvseState::Charging),
-        (EvseState::Charging, EvseInput::RemoteStop) => Ok(EvseState::Preparing),
-        (EvseState::Charging, EvseInput::SuspendEV) => Ok(EvseState::SuspendedEV),
-        (EvseState::Charging, EvseInput::SuspendEVSE) => Ok(EvseState::SuspendedEVSE),
-        (EvseState::SuspendedEV, EvseInput::Resume) => Ok(EvseState::Charging),
-        (EvseState::SuspendedEV, EvseInput::Unplug) => Ok(EvseState::Available),
-        (EvseState::SuspendedEVSE, EvseInput::Resume) => Ok(EvseState::Charging),
-        (EvseState::SuspendedEVSE, EvseInput::Unplug) => Ok(EvseState::Available),
-        (_, EvseInput::FaultDetected) => Ok(EvseState::Faulted),
-        (EvseState::Faulted, EvseInput::ClearFault) => Ok(EvseState::Available),
-        _ => Err(TransitionError::InvalidTransition),
+    match input {
+        EvseInput::PlugIn => match current {
+            EvseState::Available => Ok(EvseState::Preparing),
+            EvseState::Preparing => Err(TransitionError::InvalidTransition),
+            EvseState::Charging => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEV => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEVSE => Err(TransitionError::InvalidTransition),
+            EvseState::Faulted => Err(TransitionError::InvalidTransition),
+        },
+        EvseInput::Unplug => match current {
+            EvseState::Preparing => Ok(EvseState::Available),
+            EvseState::SuspendedEV => Ok(EvseState::Available),
+            EvseState::SuspendedEVSE => Ok(EvseState::Available),
+            EvseState::Available => Err(TransitionError::InvalidTransition),
+            EvseState::Charging => Err(TransitionError::InvalidTransition),
+            EvseState::Faulted => Err(TransitionError::InvalidTransition),
+        },
+        EvseInput::RemoteStart => match current {
+            EvseState::Preparing => Ok(EvseState::Charging),
+            EvseState::Available => Err(TransitionError::InvalidTransition),
+            EvseState::Charging => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEV => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEVSE => Err(TransitionError::InvalidTransition),
+            EvseState::Faulted => Err(TransitionError::InvalidTransition),
+        },
+        EvseInput::RemoteStop => match current {
+            EvseState::Charging => Ok(EvseState::Preparing),
+            EvseState::Available => Err(TransitionError::InvalidTransition),
+            EvseState::Preparing => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEV => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEVSE => Err(TransitionError::InvalidTransition),
+            EvseState::Faulted => Err(TransitionError::InvalidTransition),
+        },
+        EvseInput::SuspendEV => match current {
+            EvseState::Charging => Ok(EvseState::SuspendedEV),
+            EvseState::Available => Err(TransitionError::InvalidTransition),
+            EvseState::Preparing => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEV => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEVSE => Err(TransitionError::InvalidTransition),
+            EvseState::Faulted => Err(TransitionError::InvalidTransition),
+        },
+        EvseInput::SuspendEVSE => match current {
+            EvseState::Charging => Ok(EvseState::SuspendedEVSE),
+            EvseState::Available => Err(TransitionError::InvalidTransition),
+            EvseState::Preparing => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEV => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEVSE => Err(TransitionError::InvalidTransition),
+            EvseState::Faulted => Err(TransitionError::InvalidTransition),
+        },
+        EvseInput::Resume => match current {
+            EvseState::SuspendedEV => Ok(EvseState::Charging),
+            EvseState::SuspendedEVSE => Ok(EvseState::Charging),
+            EvseState::Available => Err(TransitionError::InvalidTransition),
+            EvseState::Preparing => Err(TransitionError::InvalidTransition),
+            EvseState::Charging => Err(TransitionError::InvalidTransition),
+            EvseState::Faulted => Err(TransitionError::InvalidTransition),
+        },
+        EvseInput::FaultDetected => match current {
+            EvseState::Available => Ok(EvseState::Faulted),
+            EvseState::Preparing => Ok(EvseState::Faulted),
+            EvseState::Charging => Ok(EvseState::Faulted),
+            EvseState::SuspendedEV => Ok(EvseState::Faulted),
+            EvseState::SuspendedEVSE => Ok(EvseState::Faulted),
+            EvseState::Faulted => Ok(EvseState::Faulted),
+        },
+        EvseInput::ClearFault => match current {
+            EvseState::Faulted => Ok(EvseState::Available),
+            EvseState::Available => Err(TransitionError::InvalidTransition),
+            EvseState::Preparing => Err(TransitionError::InvalidTransition),
+            EvseState::Charging => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEV => Err(TransitionError::InvalidTransition),
+            EvseState::SuspendedEVSE => Err(TransitionError::InvalidTransition),
+        },
     }
 }
 
