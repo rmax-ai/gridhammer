@@ -79,12 +79,12 @@ pub fn transition(state: EvseState, event: EvseEvent) -> Result<EvseState, Trans
         },
         EvseState::Charging => match event {
             EvseEvent::StopCharging => Ok(EvseState::Available),
+            EvseEvent::Unplug => Ok(EvseState::Available),
             EvseEvent::PauseEV => Ok(EvseState::SuspendedEV),
             EvseEvent::PauseEVSE => Ok(EvseState::SuspendedEVSE),
             EvseEvent::Fault => Ok(EvseState::Faulted),
             // Explicitly list illegal events
             EvseEvent::PlugIn
-            | EvseEvent::Unplug
             | EvseEvent::StartCharging
             | EvseEvent::ResumeCharging
             | EvseEvent::ClearFault
@@ -98,11 +98,11 @@ pub fn transition(state: EvseState, event: EvseEvent) -> Result<EvseState, Trans
         EvseState::SuspendedEV => match event {
             EvseEvent::ResumeCharging => Ok(EvseState::Charging),
             EvseEvent::StopCharging => Ok(EvseState::Available),
+            EvseEvent::Unplug => Ok(EvseState::Available),
             EvseEvent::PauseEVSE => Ok(EvseState::SuspendedEVSE),
             EvseEvent::Fault => Ok(EvseState::Faulted),
             // Explicitly list illegal events
             EvseEvent::PlugIn
-            | EvseEvent::Unplug
             | EvseEvent::StartCharging
             | EvseEvent::PauseEV
             | EvseEvent::ClearFault
@@ -116,10 +116,10 @@ pub fn transition(state: EvseState, event: EvseEvent) -> Result<EvseState, Trans
         EvseState::SuspendedEVSE => match event {
             EvseEvent::ResumeCharging => Ok(EvseState::Charging),
             EvseEvent::StopCharging => Ok(EvseState::Available),
+            EvseEvent::Unplug => Ok(EvseState::Available),
             EvseEvent::Fault => Ok(EvseState::Faulted),
             // Explicitly list illegal events
             EvseEvent::PlugIn
-            | EvseEvent::Unplug
             | EvseEvent::StartCharging
             | EvseEvent::PauseEV
             | EvseEvent::PauseEVSE

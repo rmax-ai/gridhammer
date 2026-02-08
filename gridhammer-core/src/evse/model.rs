@@ -106,12 +106,26 @@ impl Evse {
                     tx_event_req = Some(req);
                 }
             }
+            EvseEvent::Unplug => {
+                // Unplug ends the transaction if active (unexpected cable removal)
+                if self.transaction_manager.current_transaction.is_some() {
+                    let req = self
+                        .transaction_manager
+                        .stop_transaction(
+                            timestamp,
+                            self.id as i32,
+                            TriggerReasonEnum::EVCommunicationLost,
+                            Some("EVDisconnected".to_string()),
+                        )
+                        .map_err(|e| e.to_string())?;
+                    tx_event_req = Some(req);
+                }
+            }
             // For updates, we might need a separate trigger or assume periodic updates
             // But here we are handling discrete events.
             _ => {}
         }
 
-        // 3. Update state
         self.state = new_state;
         Ok((new_state, tx_event_req))
     }
@@ -164,6 +178,37 @@ mod tests {
         assert_eq!(req.event_type, TransactionEventEnum::Ended);
         assert_eq!(req.transaction_info.transaction_id, "tx1");
         assert_eq!(req.transaction_info.time_spent_charging, Some(10)); // 120 - 110
+    }
+
+    #[test]
+    fn test_unplug_should_end_transaction() {
+        let mut evse = Evse::new(1);
+        let ts = Utc.timestamp_opt(100, 0).unwrap();
+
+        // Start Charging
+        evse.handle_event(EvseEvent::PlugIn, ts, None).unwrap();
+        evse.handle_event(EvseEvent::StartCharging, ts, Some("tx1".to_string()))
+            .unwrap();
+        assert_eq!(evse.state, EvseState::Charging);
+        assert!(evse.transaction_manager.current_transaction.is_some());
+
+        // Unplug (Unexpectedly removed cable)
+        let (state, tx_req) = evse.handle_event(EvseEvent::Unplug, ts, None).unwrap();
+
+        // Should be Available
+        assert_eq!(state, EvseState::Available);
+
+        // Transaction should be ENDED (or at least stopped)
+        // Check if we got an Ended event
+        let req = tx_req.expect("Should emit Ended event on Unplug");
+        assert_eq!(req.event_type, TransactionEventEnum::Ended);
+        assert_eq!(
+            req.transaction_info.stopped_reason,
+            Some("EVDisconnected".to_string())
+        );
+
+        // Transaction manager should be empty
+        assert!(evse.transaction_manager.current_transaction.is_none());
     }
 
     #[test]
