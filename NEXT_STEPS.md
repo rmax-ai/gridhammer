@@ -12,17 +12,11 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **TransactionEvent lifecycle (NOW)**
-   * Implement Started / Updated / Ended
-   * Encode invariant checks:
-     * no orphan transactions
-     * no double-ended transactions
-
-## Next up (queued)
-
-- [ ] **Artifact emission (minimal)**
+- [ ] **Artifact emission (minimal) (NOW)**
    * `evse_states.jsonl`
    * Deterministic ordering
+
+## Next up (queued)
 
 - [ ] **CLI v0**
    * `gridhammer run <scenario>`
@@ -87,7 +81,7 @@ Do not parallelize across layers prematurely.
    * Add compile-time exhaustiveness checks
    * No ChargingProfiles yet
 
-- [ ] **TransactionEvent lifecycle (NOW)**
+- [x] **TransactionEvent lifecycle (Done)**
    * Implement Started / Updated / Ended
    * Encode invariant checks:
      * no orphan transactions
