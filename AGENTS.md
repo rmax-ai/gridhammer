@@ -55,7 +55,7 @@ Each agent owns exactly one service path. Ownership cannot be shared or reinterp
 
 | Agent | Path |
 | --- | --- |
-| rust-core-agent | rust-core/** |
+| rust-core-agent | rust-core/**, gridhammer-core/** |
 | cli-agent | ts-shell/** |
 | scenario-agent | scenarios/** |
 | steward-agent | . (governance) |
