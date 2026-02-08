@@ -84,7 +84,7 @@ Do not parallelize across layers prematurely.
      * seeded RNG
      * no async in core logic
 
-- [ ] **EVSE FSM v0**
+- [x] **EVSE FSM v0**
    * Define EVSE states as enums
    * Encode legal transitions exhaustively
    * Add compile-time exhaustiveness checks
