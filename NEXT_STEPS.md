@@ -196,7 +196,7 @@ Do not parallelize across layers prematurely.
       * Validated via Zod
 
 
-2. **CLI v0**
+2. **CLI v0 (NOW)**
 
    ```
    gridhammer run <scenario>
