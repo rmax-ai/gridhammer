@@ -156,6 +156,21 @@ Network errors propagate immediately to the core FSM. No `smart-gateway-agent`.
 
 ---
 
+## Decision 11: Deterministic ChargingProfile Execution
+
+**Decision**
+ChargingProfile execution must be pure, synchronous, and deterministic. It resolves `TxProfile`, `TxDefaultProfile`, and `ChargingStationMaxProfile` into a single `EnforcedLimit` with an explicit `EnforcementReason`.
+
+**Rationale**
+*   **Zero Ambiguity**: The CSMS must know exactly *why* a limit was applied (Profile vs. Station vs. Internal).
+*   **Zero-Power Semantics**: A limit of 0.0 must explicitly trigger `SuspendedEVSE` or `SuspendedEV` state.
+*   **Tie-breaking**: Overlapping profiles are resolved by `stackLevel` > `id` (or specific OCPP 2.1 rules), with no "undefined behavior".
+
+**Consequence**
+The `Executor` is a pure function. `Evse` logic depends on this output for all power limits. No "soft" limits or heuristics allowed.
+
+---
+
 ## Reconsideration policy
 
 Decisions here change only if:
