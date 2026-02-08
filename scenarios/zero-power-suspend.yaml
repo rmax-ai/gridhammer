@@ -1,0 +1,24 @@
+metadata:
+  version: "1.0"
+  name: "Zero Power Suspend"
+  description: "Test suspension behavior when power request drops to zero"
+site:
+  transformer_capacity_kw: 1000
+  evses:
+    - id: "1"
+      max_power_kw: 350
+      connector_type: "MCS"
+events:
+  arrivals:
+    - tick: 10
+      evse_id: "1"
+      vehicle_id: "v1"
+      requested_energy_kwh: 100
+  power_requests:
+    - tick: 50
+      evse_id: "1"
+      power_kw: 0
+    - tick: 100
+      evse_id: "1"
+      power_kw: 350
+  faults: []

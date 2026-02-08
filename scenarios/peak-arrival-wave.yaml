@@ -1,0 +1,46 @@
+metadata:
+  version: "1.0"
+  name: "Peak Arrival Wave"
+  description: "Stress test with simultaneous arrivals on all EVSEs"
+site:
+  transformer_capacity_kw: 2000
+  evses:
+    - id: "1"
+      max_power_kw: 350
+      connector_type: "MCS"
+    - id: "2"
+      max_power_kw: 350
+      connector_type: "MCS"
+    - id: "3"
+      max_power_kw: 350
+      connector_type: "MCS"
+    - id: "4"
+      max_power_kw: 350
+      connector_type: "MCS"
+    - id: "5"
+      max_power_kw: 350
+      connector_type: "MCS"
+events:
+  arrivals:
+    - tick: 10
+      evse_id: "1"
+      vehicle_id: "v1"
+      requested_energy_kwh: 100
+    - tick: 11
+      evse_id: "2"
+      vehicle_id: "v2"
+      requested_energy_kwh: 100
+    - tick: 12
+      evse_id: "3"
+      vehicle_id: "v3"
+      requested_energy_kwh: 100
+    - tick: 13
+      evse_id: "4"
+      vehicle_id: "v4"
+      requested_energy_kwh: 100
+    - tick: 14
+      evse_id: "5"
+      vehicle_id: "v5"
+      requested_energy_kwh: 100
+  power_requests: []
+  faults: []

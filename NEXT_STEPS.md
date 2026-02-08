@@ -12,16 +12,13 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Golden MCS scenarios (NOW)**
-   * Peak arrival wave
-   * Ramp-rate stress
-   * Zero-power suspend
-   * Mid-session fault
-   * Site curtailment
+- [ ] **Assertions (NOW)**
+   * Explicit failure expectations
+   * No “manual inspection only” tests
 
 ## Next up (queued)
 
-- [ ] **Assertions**
+- [ ] **Replay certification**
 
 ---
 
@@ -206,7 +203,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Prove GridHammer finds real bugs.
 
-- [ ] **Golden MCS scenarios**
+- [x] **Golden MCS scenarios (Done)**
    * Peak arrival wave
    * Ramp-rate stress
    * Zero-power suspend
@@ -214,6 +211,7 @@ Do not parallelize across layers prematurely.
    * Site curtailment
 
 - [ ] **Assertions**
+
    * Explicit failure expectations
    * No “manual inspection only” tests
 

@@ -27,7 +27,7 @@ const arrivalSchema = z.object({
 const powerRequestSchema = z.object({
   tick: z.number().int().min(0),
   evse_id: z.string(),
-  power_kw: z.number().positive(),
+  power_kw: z.number().min(0),
 });
 
 const faultSchema = z.object({

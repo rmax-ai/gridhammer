@@ -1,0 +1,33 @@
+metadata:
+  version: "1.0"
+  name: "Ramp Rate Stress"
+  description: "Rapidly changing power requests to test stability"
+site:
+  transformer_capacity_kw: 1000
+  evses:
+    - id: "1"
+      max_power_kw: 350
+      connector_type: "MCS"
+events:
+  arrivals:
+    - tick: 10
+      evse_id: "1"
+      vehicle_id: "v1"
+      requested_energy_kwh: 200
+  power_requests:
+    - tick: 20
+      evse_id: "1"
+      power_kw: 50
+    - tick: 25
+      evse_id: "1"
+      power_kw: 350
+    - tick: 30
+      evse_id: "1"
+      power_kw: 100
+    - tick: 35
+      evse_id: "1"
+      power_kw: 300
+    - tick: 40
+      evse_id: "1"
+      power_kw: 50
+  faults: []

@@ -1,0 +1,32 @@
+metadata:
+  version: "1.0"
+  name: "Site Curtailment"
+  description: "Overfill site capacity to trigger curtailment/queueing"
+site:
+  transformer_capacity_kw: 500
+  evses:
+    - id: "1"
+      max_power_kw: 350
+      connector_type: "MCS"
+    - id: "2"
+      max_power_kw: 350
+      connector_type: "MCS"
+    - id: "3"
+      max_power_kw: 350
+      connector_type: "MCS"
+events:
+  arrivals:
+    - tick: 10
+      evse_id: "1"
+      vehicle_id: "v1"
+      requested_energy_kwh: 100
+    - tick: 20
+      evse_id: "2"
+      vehicle_id: "v2"
+      requested_energy_kwh: 100
+    - tick: 30
+      evse_id: "3"
+      vehicle_id: "v3"
+      requested_energy_kwh: 100
+  power_requests: []
+  faults: []
