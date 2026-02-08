@@ -12,13 +12,14 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Artifact emission (minimal) (NOW)**
-   * `evse_states.jsonl`
-   * Deterministic ordering
+- [ ] **CLI v0 (NOW)**
+   * `gridhammer run <scenario>`
+   * `gridhammer replay <run-id>`
+   * `gridhammer validate <scenario>`
 
 ## Next up (queued)
 
-- [ ] **CLI v0**
+- [ ] **Experiment registry**
    * `gridhammer run <scenario>`
    * `gridhammer replay <run-id>`
    * `gridhammer validate <scenario>`
@@ -87,7 +88,7 @@ Do not parallelize across layers prematurely.
      * no orphan transactions
      * no double-ended transactions
 
-- [ ] **Artifact emission (minimal)**
+- [x] **Artifact emission (minimal)**
    * `evse_states.jsonl`
    * Deterministic ordering
 
