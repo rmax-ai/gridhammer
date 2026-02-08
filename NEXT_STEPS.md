@@ -12,12 +12,13 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Replay certification (NOW)**
-   * Run → replay → diff must be empty
+- [ ] **Read-only UI (NOW)**
+   * EVSE timelines
+   * Profile diffs
 
 ## Next up (queued)
 
-- [ ] **Read-only UI**
+- [ ] **Diff view**
 
 ---
 
@@ -213,7 +214,7 @@ Do not parallelize across layers prematurely.
    * Explicit failure expectations
    * No “manual inspection only” tests
 
-- [ ] **Replay certification**
+- [x] **Replay certification (Done, Verified 2026-02-08)**
    * Run → replay → diff must be empty
 
 **Exit criteria**
