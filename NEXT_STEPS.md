@@ -12,25 +12,12 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [x] **EVSE FSM v0 (Done)**
-   * Define EVSE states as enums
-   * Encode legal transitions exhaustively
-   * Add compile-time exhaustiveness checks
-   * No ChargingProfiles yet
-
-## Next up (queued)
-
 - [ ] **CLI v0 (NOW)**
    * `gridhammer run <scenario>`
    * `gridhammer replay <run-id>`
    * `gridhammer validate <scenario>`
 
 ## Next up (queued)
-
-- [ ] **Experiment registry**
-   * `gridhammer run <scenario>`
-   * `gridhammer replay <run-id>`
-   * `gridhammer validate <scenario>`
 
 - [ ] **Experiment registry**
    * Scenario hash
