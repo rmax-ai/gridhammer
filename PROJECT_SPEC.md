@@ -317,6 +317,7 @@ This section enumerates behavior that is explicitly **out of scope**. Any attemp
 *   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
 *   **Physics**: No battery chemistry, real power electronics, or grid physics.
 *   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
+*   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
 
 Reject any task that implies:
 
