@@ -9,6 +9,7 @@ pub enum EvseState {
     SuspendedEVSE,
     Faulted,
     Unavailable,
+    Reserved,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -22,4 +23,8 @@ pub enum EvseEvent {
     ResumeCharging,
     Fault,
     ClearFault,
+    SetUnavailable,
+    SetAvailable,
+    Reserve,
+    CancelReservation,
 }
