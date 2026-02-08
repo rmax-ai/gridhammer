@@ -12,6 +12,14 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
+- [x] **EVSE FSM v0 (Done)**
+   * Define EVSE states as enums
+   * Encode legal transitions exhaustively
+   * Add compile-time exhaustiveness checks
+   * No ChargingProfiles yet
+
+## Next up (queued)
+
 - [ ] **CLI v0 (NOW)**
    * `gridhammer run <scenario>`
    * `gridhammer replay <run-id>`
@@ -76,7 +84,7 @@ Do not parallelize across layers prematurely.
      * seeded RNG
      * no async in core logic
 
-- [x] **EVSE FSM v0 (Done)**
+- [ ] **EVSE FSM v0**
    * Define EVSE states as enums
    * Encode legal transitions exhaustively
    * Add compile-time exhaustiveness checks
