@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::profiles::executor::Executor;
+    use crate::profiles::executor::{EnforcementReason, Executor};
     use crate::profiles::model::{
         ChargingProfile, ChargingProfileKind, ChargingProfilePurpose, ChargingRateUnit,
         ChargingSchedule, ChargingSchedulePeriod, RecurrencyKind,
@@ -163,28 +163,43 @@ mod tests {
 
         #[test]
         fn priority_oracle(
-            base_profile in arb_charging_profile(),
-            higher_stack_profile in arb_charging_profile(),
+            mut p1 in arb_charging_profile(),
+            mut p2 in arb_charging_profile(),
             current_time in arb_datetime(),
             transaction_start in arb_datetime_option()
         ) {
-             // Setup specific case: 2 TxProfiles, one clearly higher priority
-             let mut p1 = base_profile;
+             // p1: TxProfile, stack 1, limit 10
              p1.charging_profile_purpose = ChargingProfilePurpose::TxProfile;
+             p1.charging_profile_kind = ChargingProfileKind::Absolute;
+             p1.stack_level = 1;
              p1.valid_from = None;
              p1.valid_to = None;
+             p1.charging_schedule.start_schedule = None;
 
-             let mut p2 = higher_stack_profile;
+             // p2: TxProfile, stack 2, limit 20
              p2.charging_profile_purpose = ChargingProfilePurpose::TxProfile;
-             p2.stack_level = p1.stack_level.saturating_add(1);
+             p2.charging_profile_kind = ChargingProfileKind::Absolute;
+             p2.stack_level = 2;
              p2.valid_from = None;
              p2.valid_to = None;
+             p2.charging_schedule.start_schedule = None;
 
-             let profiles = vec![p1.clone(), p2.clone()];
+             p2.charging_schedule.charging_rate_unit = ChargingRateUnit::Watts;
+             p2.charging_schedule.charging_schedule_period = vec![ChargingSchedulePeriod {
+                 start_period: 0,
+                 limit: 20.0,
+                 number_phases: None,
+             }];
+
+             let profiles = vec![p1, p2];
              let result = Executor::resolve(profiles, current_time, 10000.0, 10000.0, transaction_start);
 
-             if let Ok(Some(_enforced)) = result {
-                 // Since p2 has higher stack_level, it should be selected
+             if let Ok(Some(enforced)) = result {
+                 // p2 wins due to stack_level, so limit should be 20.0
+                 prop_assert_eq!(enforced.limit, 20.0);
+                 prop_assert_eq!(enforced.reason, EnforcementReason::ProfileLimit);
+             } else {
+                 prop_assert!(false, "Should have resolved a profile");
              }
         }
 
@@ -207,40 +222,63 @@ mod tests {
 
         #[test]
         fn tx_default_and_station_max_interaction(
-            default_profile in arb_charging_profile(),
-            station_max in arb_charging_profile(),
+            mut default_profile in arb_charging_profile(),
+            mut station_max in arb_charging_profile(),
             current_time in arb_datetime(),
             transaction_start in arb_datetime_option()
         ) {
-            // Setup: TxDefault and StationMax only
-            let mut p1 = default_profile;
-            p1.charging_profile_purpose = ChargingProfilePurpose::TxDefaultProfile;
-            p1.valid_from = None;
-            p1.valid_to = None;
-            // Ensure distinct IDs
-            p1.id = 1;
+            // Setup constant schedules
+            default_profile.charging_profile_purpose = ChargingProfilePurpose::TxDefaultProfile;
+            default_profile.charging_profile_kind = ChargingProfileKind::Absolute;
+            default_profile.valid_from = None;
+            default_profile.valid_to = None;
+            default_profile.charging_schedule.start_schedule = None;
+            default_profile.charging_schedule.charging_rate_unit = ChargingRateUnit::Watts;
+             default_profile.charging_schedule.charging_schedule_period = vec![ChargingSchedulePeriod {
+                 start_period: 0,
+                 limit: 100.0,
+                 number_phases: None,
+             }];
 
-            let mut p2 = station_max;
-            p2.charging_profile_purpose = ChargingProfilePurpose::ChargingStationMaxProfile;
-            p2.valid_from = None;
-            p2.valid_to = None;
-            p2.id = 2;
-            // Ensure same units for simple comparison
-            p2.charging_schedule.charging_rate_unit = p1.charging_schedule.charging_rate_unit.clone();
+            station_max.charging_profile_purpose = ChargingProfilePurpose::ChargingStationMaxProfile;
+            station_max.charging_profile_kind = ChargingProfileKind::Absolute;
+            station_max.valid_from = None;
+            station_max.valid_to = None;
+            station_max.charging_schedule.start_schedule = None;
+            station_max.charging_schedule.charging_rate_unit = ChargingRateUnit::Watts;
+             station_max.charging_schedule.charging_schedule_period = vec![ChargingSchedulePeriod {
+                 start_period: 0,
+                 limit: 50.0,
+                 number_phases: None,
+             }];
 
-
-            let profiles = vec![p1.clone(), p2.clone()];
+            // Case 1: Station Max (50) < Default (100)
+            let profiles = vec![default_profile.clone(), station_max.clone()];
             let result = Executor::resolve(profiles, current_time, 10000.0, 10000.0, transaction_start);
 
             if let Ok(Some(enforced)) = result {
-                 // The reason should be correct
-                 if enforced.reason == crate::profiles::executor::EnforcementReason::ProfileLimit {
-                     // from default
-                 } else if enforced.reason == crate::profiles::executor::EnforcementReason::StationLimit {
-                     // from station max
-                 } else {
-                     // internal
-                 }
+                prop_assert_eq!(enforced.limit, 50.0);
+                prop_assert_eq!(enforced.reason, EnforcementReason::StationLimit);
+            } else {
+                 prop_assert!(false, "Should have resolved");
+            }
+
+            // Case 2: Station Max (50) > Default (20)
+             let mut default_low = default_profile.clone();
+             default_low.charging_schedule.charging_schedule_period = vec![ChargingSchedulePeriod {
+                 start_period: 0,
+                 limit: 20.0,
+                 number_phases: None,
+             }];
+
+            let profiles_low = vec![default_low, station_max.clone()];
+            let result_low = Executor::resolve(profiles_low, current_time, 10000.0, 10000.0, transaction_start);
+
+            if let Ok(Some(enforced)) = result_low {
+                prop_assert_eq!(enforced.limit, 20.0);
+                prop_assert_eq!(enforced.reason, EnforcementReason::ProfileLimit);
+            } else {
+                 prop_assert!(false, "Should have resolved");
             }
         }
     }
