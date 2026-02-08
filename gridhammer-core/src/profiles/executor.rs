@@ -2,9 +2,10 @@ use super::model::{
     ChargingProfile, ChargingProfileKind, ChargingProfilePurpose, ChargingRateUnit, RecurrencyKind,
 };
 use chrono::{DateTime, Duration, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EnforcedLimit {
     pub limit: f64,
     pub unit: ChargingRateUnit,

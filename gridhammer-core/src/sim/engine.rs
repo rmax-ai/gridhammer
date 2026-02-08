@@ -31,9 +31,10 @@ impl Engine {
 
     pub fn tick(&mut self) -> Vec<TransactionEventRequest> {
         self.clock.tick();
+        let now = self.clock.now();
         for evse in &mut self.evses {
             // TODO: handle error
-            let _ = evse.tick_transaction();
+            let _ = evse.tick_transaction(now);
         }
         self.messages.drain(..).collect()
     }

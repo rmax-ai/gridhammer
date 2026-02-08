@@ -2,6 +2,8 @@ use super::fsm::transition;
 use super::state::{EvseEvent, EvseState};
 use super::transaction::TransactionManager;
 use crate::ocpp::messages::{ChargingStateEnum, TransactionEventRequest, TriggerReasonEnum};
+use crate::profiles::executor::{EnforcedLimit, Executor};
+use crate::profiles::model::ChargingProfile as CoreChargingProfile;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +12,8 @@ pub struct Evse {
     pub id: u32,
     pub state: EvseState,
     pub transaction_manager: TransactionManager,
+    pub charging_profiles: Vec<CoreChargingProfile>,
+    pub current_limit: Option<EnforcedLimit>,
 }
 
 impl Evse {
@@ -18,6 +22,8 @@ impl Evse {
             id,
             state: EvseState::Available,
             transaction_manager: TransactionManager::new(),
+            charging_profiles: Vec::new(),
+            current_limit: None,
         }
     }
 
@@ -130,9 +136,39 @@ impl Evse {
         Ok((new_state, tx_event_req))
     }
 
-    pub fn tick_transaction(&mut self) -> Result<(), String> {
-        // This could be used to trigger periodic updates or check limits
-        // For now, no automatic updates on tick unless required.
+    pub fn set_charging_profile(&mut self, profile: CoreChargingProfile) {
+        // Remove existing profile with same id or same stack_level/purpose collision
+        self.charging_profiles.retain(|p| {
+            let same_id = p.id == profile.id;
+            let same_purpose_stack = p.charging_profile_purpose == profile.charging_profile_purpose
+                && p.stack_level == profile.stack_level;
+            !same_id && !same_purpose_stack
+        });
+
+        self.charging_profiles.push(profile);
+    }
+
+    pub fn tick_transaction(&mut self, current_time: DateTime<Utc>) -> Result<(), String> {
+        let transaction_start = self
+            .transaction_manager
+            .current_transaction
+            .as_ref()
+            .map(|tx| tx.start_timestamp);
+        let transaction_id = self
+            .transaction_manager
+            .current_transaction
+            .as_ref()
+            .map(|tx| tx.transaction_id.clone());
+
+        let limit = Executor::resolve(
+            self.charging_profiles.clone(),
+            current_time,
+            transaction_start,
+            transaction_id,
+        )
+        .map_err(|e| e.to_string())?;
+
+        self.current_limit = limit;
         Ok(())
     }
 }
@@ -284,5 +320,50 @@ mod tests {
 
         // Transaction should be cleared
         assert!(evse.transaction_manager.current_transaction.is_none());
+    }
+
+    #[test]
+    fn test_charging_profile_integration() {
+        use crate::profiles::model::{
+            ChargingProfileKind, ChargingProfilePurpose, ChargingRateUnit, ChargingSchedule,
+            ChargingSchedulePeriod,
+        };
+
+        let mut evse = Evse::new(1);
+        let now = Utc::now();
+
+        // No profiles initially
+        evse.tick_transaction(now).unwrap();
+        assert_eq!(evse.current_limit, None);
+
+        // Add a profile
+        let profile = CoreChargingProfile {
+            id: 1,
+            stack_level: 1,
+            charging_profile_purpose: ChargingProfilePurpose::TxProfile,
+            charging_profile_kind: ChargingProfileKind::Absolute,
+            recurrency_kind: None,
+            valid_from: None,
+            valid_to: None,
+            charging_schedule: ChargingSchedule {
+                id: 1,
+                start_schedule: None,
+                duration: None,
+                charging_rate_unit: ChargingRateUnit::Watts,
+                charging_schedule_period: vec![ChargingSchedulePeriod {
+                    start_period: 0,
+                    limit: 5000.0,
+                    number_phases: None,
+                }],
+                min_charging_rate: None,
+            },
+        };
+
+        evse.set_charging_profile(profile);
+        evse.tick_transaction(now).unwrap();
+
+        let limit = evse.current_limit.expect("Should have a limit");
+        assert_eq!(limit.limit, 5000.0);
+        assert_eq!(limit.source_profile_id, 1);
     }
 }
