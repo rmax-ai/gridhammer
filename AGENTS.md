@@ -71,6 +71,7 @@ Each agent owns exactly one service path. Ownership cannot be shared or reinterp
 * `settlement-agent` (CPMS concern)
 * `smart-gateway-agent` (Gateway heuristic concern)
 * `physics-agent` (Physics concern)
+* `plc-agent` (PLC/ISO-15118 concern)
 
 Agents must never edit files outside their owned path without explicit human authorization.
 Communication between services is event-driven (events, protobuf, OpenAPI) only. No synchronous direct calls.

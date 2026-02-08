@@ -51,7 +51,7 @@ Maintain the **experiment registry** and ensure **run reproducibility**.
 
 ## Core Identity
 
-Experiment ledger guardian.
+Experiment registry guardian.
 
 ---
 
