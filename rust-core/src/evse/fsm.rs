@@ -32,8 +32,8 @@ pub fn transition(current: EvseState, input: EvseInput) -> Result<EvseState, Tra
             EvseState::Preparing => Ok(EvseState::Available),
             EvseState::SuspendedEV => Ok(EvseState::Available),
             EvseState::SuspendedEVSE => Ok(EvseState::Available),
+            EvseState::Charging => Ok(EvseState::Available),
             EvseState::Available => Err(TransitionError::InvalidTransition),
-            EvseState::Charging => Err(TransitionError::InvalidTransition),
             EvseState::Faulted => Err(TransitionError::InvalidTransition),
         },
         EvseInput::RemoteStart => match current {
@@ -46,10 +46,10 @@ pub fn transition(current: EvseState, input: EvseInput) -> Result<EvseState, Tra
         },
         EvseInput::RemoteStop => match current {
             EvseState::Charging => Ok(EvseState::Preparing),
+            EvseState::SuspendedEV => Ok(EvseState::Preparing),
+            EvseState::SuspendedEVSE => Ok(EvseState::Preparing),
             EvseState::Available => Err(TransitionError::InvalidTransition),
             EvseState::Preparing => Err(TransitionError::InvalidTransition),
-            EvseState::SuspendedEV => Err(TransitionError::InvalidTransition),
-            EvseState::SuspendedEVSE => Err(TransitionError::InvalidTransition),
             EvseState::Faulted => Err(TransitionError::InvalidTransition),
         },
         EvseInput::SuspendEV => match current {
@@ -148,6 +148,26 @@ mod tests {
         assert_eq!(
             transition(EvseState::Available, EvseInput::Unplug),
             Err(TransitionError::InvalidTransition)
+        );
+    }
+
+    #[test]
+    fn test_charging_to_unplug() {
+        assert_eq!(
+            transition(EvseState::Charging, EvseInput::Unplug),
+            Ok(EvseState::Available)
+        );
+    }
+
+    #[test]
+    fn test_suspended_to_remotestop() {
+        assert_eq!(
+            transition(EvseState::SuspendedEV, EvseInput::RemoteStop),
+            Ok(EvseState::Preparing)
+        );
+        assert_eq!(
+            transition(EvseState::SuspendedEVSE, EvseInput::RemoteStop),
+            Ok(EvseState::Preparing)
         );
     }
 }
