@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
     "lint": "echo \"No lint yet\" && exit 0"
   },
   "dependencies": {
