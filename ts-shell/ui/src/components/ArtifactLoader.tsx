@@ -30,7 +30,7 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
         
         for (let i = 1; i < lines.length; i++) {
             const values = lines[i].split(',');
-            const record: any = {};
+            const record: Record<string, string | number | undefined> = {};
             header.forEach((h, idx) => {
                 const val = values[idx]?.trim();
                 if (h === 'tick' || h === 'evse_id' || h === 'power_w' || h === 'limit_w') {

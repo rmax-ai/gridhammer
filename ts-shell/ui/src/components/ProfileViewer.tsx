@@ -6,12 +6,21 @@ interface Props {
   evseData: EvseStateRecord[];
 }
 
+interface SetChargingProfilePayload {
+  chargingProfile: {
+    id: number;
+    stackLevel: number;
+    chargingProfilePurpose: string;
+    [key: string]: unknown;
+  };
+}
+
 export const ProfileViewer: React.FC<Props> = ({ traceData, evseData }) => {
   const profiles = useMemo(() => {
     return traceData
       .filter(r => r.action === 'SetChargingProfile' && r.direction === 'inbound')
       .map(r => {
-        const payload = r.payload as any;
+        const payload = r.payload as SetChargingProfilePayload;
         return {
             tick: r.tick,
             timestamp: r.timestamp,
