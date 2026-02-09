@@ -3,13 +3,15 @@ import './App.css'
 import { ArtifactLoader } from './components/ArtifactLoader'
 import { EvseTimeline } from './components/EvseTimeline'
 import { ProfileViewer } from './components/ProfileViewer'
-import type { EvseStateRecord, OcppTraceRecord } from './types'
+import { PowerCurve } from './components/PowerCurve'
+import type { EvseStateRecord, OcppTraceRecord, PowerSeriesRecord } from './types'
 
 function App() {
   const [evseData, setEvseData] = useState<EvseStateRecord[] | null>(null)
   const [traceData, setTraceData] = useState<OcppTraceRecord[] | null>(null)
+  const [powerData, setPowerData] = useState<PowerSeriesRecord[] | null>(null)
 
-  const hasData = evseData || traceData;
+  const hasData = evseData || traceData || powerData;
 
   return (
     <div className="container">
@@ -22,27 +24,35 @@ function App() {
           <ArtifactLoader 
             onEvseDataLoaded={setEvseData}
             onTraceDataLoaded={setTraceData}
+            onPowerDataLoaded={setPowerData}
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ padding: '10px' }}>
                 <button 
-                  onClick={() => { setEvseData(null); setTraceData(null); }} 
+                  onClick={() => { setEvseData(null); setTraceData(null); setPowerData(null); }} 
                   style={{ margin: '10px' }}
                 >
                   Load Another Run
                 </button>
                 <div style={{ fontSize: '0.9em', color: '#666' }}>
                     Loaded: {evseData ? `EVSE States (${evseData.length})` : ''} 
-                    {evseData && traceData ? ' + ' : ''}
+                    {evseData && (traceData || powerData) ? ' + ' : ''}
                     {traceData ? `OCPP Trace (${traceData.length})` : ''}
+                    {(evseData || traceData) && powerData ? ' + ' : ''}
+                    {powerData ? `Power Series (${powerData.length})` : ''}
                 </div>
             </div>
 
             {evseData && (
                 <section>
-                    <h2>EVSE Timelines</h2>
                     <EvseTimeline records={evseData} />
+                </section>
+            )}
+
+            {powerData && (
+                <section>
+                    <PowerCurve data={powerData} />
                 </section>
             )}
 

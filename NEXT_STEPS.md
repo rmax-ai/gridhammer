@@ -12,15 +12,15 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [ ] **Read-only UI (NOW)**
+- [x] **Read-only UI (Done)**
    - [x] Scaffold Vite app
    - [x] EVSE timelines
    - [x] Profile diffs
-   - [ ] Power curves
+   - [x] Power curves
 
 ## Next up (queued)
 
-- [ ] **Diff view**
+- [ ] **Diff view (NOW)**
 - [ ] **Update README.md**
 
 ---

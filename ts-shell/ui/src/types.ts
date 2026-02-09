@@ -42,3 +42,11 @@ export interface OcppTraceRecord {
   action: string;
   payload: unknown;
 }
+
+export interface PowerSeriesRecord {
+  tick: number;
+  timestamp: string;
+  evse_id: number;
+  power_w: number;
+  limit_w?: number;
+}

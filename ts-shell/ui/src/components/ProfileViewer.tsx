@@ -10,11 +10,14 @@ export const ProfileViewer: React.FC<Props> = ({ traceData, evseData }) => {
   const profiles = useMemo(() => {
     return traceData
       .filter(r => r.action === 'SetChargingProfile' && r.direction === 'inbound')
-      .map(r => ({
-        tick: r.tick,
-        timestamp: r.timestamp,
-        profile: r.payload.chargingProfile
-      }));
+      .map(r => {
+        const payload = r.payload as any;
+        return {
+            tick: r.tick,
+            timestamp: r.timestamp,
+            profile: payload.chargingProfile
+        };
+      });
   }, [traceData]);
 
   // Derive enforced limits
