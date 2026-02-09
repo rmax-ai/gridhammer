@@ -38,16 +38,17 @@ If any design choice conflicts with these goals, **reject it**.
 * Deterministic execution with seeds
 * CLI + optional web UI
 
-### Out of scope (must not be implemented)
+### Out of scope (Forbidden Domain Scope)
 
-* ISO-15118 PLC timing
-* EV battery chemistry
-* Real power electronics
-* UI-defined behavior
-* Non-deterministic simulations
-* CPMS runtime logic (pricing, billing, invoicing, user ledgers, roaming settlement)
-* OCPI / Roaming logic
-* Smart Gateway logic (smoothing, hidden retries)
+The following areas are **permanently out of scope**:
+
+*   **CPMS runtime logic**: Pricing engines, billing, invoicing, user ledgers, roaming settlement.
+*   **OCPI / Roaming**: No OCPI, OCHP, or OICP logic.
+*   **Smart Gateway**: No retry smoothing, connection holding, message buffering, or "smart" pipes.
+*   **Physics**: No battery chemistry, real power electronics, or grid physics.
+*   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
+*   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
+*   **Non-deterministic simulations**: "Works on my machine" is not acceptable.
 
 ---
 

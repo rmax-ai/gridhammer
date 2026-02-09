@@ -38,6 +38,7 @@ Do not parallelize across layers prematurely.
    * Any contradiction must be resolved before code.
    * **CPMS runtime logic references removed (Confirmed 0 matches).**
    * **AGENTS.md explicit prohibitions verified.**
+   * **Forbidden Domain Scope explicitly synchronized across all docs.**
 
 - [x] **Create repo skeleton (Done)**
    ```
