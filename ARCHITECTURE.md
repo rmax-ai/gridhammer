@@ -72,6 +72,7 @@ The Rust core **does not**:
 The TypeScript shell owns:
 
 * CLI UX (`gridhammer`)
+  * `run`, `replay`, `sweep`, `validate`, `export`
 * Scenario authoring and validation
 * Experiment registry
 * Artifact management
