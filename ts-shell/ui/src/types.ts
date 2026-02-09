@@ -40,5 +40,5 @@ export interface OcppTraceRecord {
   timestamp: string;
   direction: Direction;
   action: string;
-  payload: any;
+  payload: unknown;
 }
