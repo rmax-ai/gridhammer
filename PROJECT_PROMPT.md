@@ -50,6 +50,8 @@ The following areas are **permanently out of scope**:
 *   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
 *   **Non-deterministic simulations**: "Works on my machine" is not acceptable.
 
+Explicitly forbidden agents: `pricing-agent`, `billing-agent`, `invoicing-agent`, `ledger-agent`, `user-agent`, `ocpi-agent`, `roaming-agent`, `settlement-agent`, `smart-gateway-agent`, `physics-agent`, `plc-agent`.
+
 ---
 
 ## 3. System architecture (you must follow this)

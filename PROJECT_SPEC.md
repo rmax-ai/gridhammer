@@ -319,6 +319,8 @@ This section enumerates behavior that is explicitly **out of scope**. Any attemp
 *   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
 *   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
 
+Explicitly forbidden agents: `pricing-agent`, `billing-agent`, `invoicing-agent`, `ledger-agent`, `user-agent`, `ocpi-agent`, `roaming-agent`, `settlement-agent`, `smart-gateway-agent`, `physics-agent`, `plc-agent`.
+
 Reject any task that implies:
 
 * Protocol shortcuts

@@ -150,6 +150,8 @@ The following areas are **permanently out of scope**:
 *   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
 *   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
 
+Explicitly forbidden agents: `pricing-agent`, `billing-agent`, `invoicing-agent`, `ledger-agent`, `user-agent`, `ocpi-agent`, `roaming-agent`, `settlement-agent`, `smart-gateway-agent`, `physics-agent`, `plc-agent`.
+
 If you need these features, you are looking for a CPMS, not GridHammer.
 
 
