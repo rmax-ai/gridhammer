@@ -28,7 +28,7 @@ Do not parallelize across layers prematurely.
 
 **Goal:** Make it impossible to build the wrong thing.
 
-- [x] **Freeze contracts (Done, Refined 2026-02-09: Forbidden agents explicitly listed in all contracts)**
+- [x] **Freeze contracts (Done, Refined 2026-02-09: Forbidden agents explicitly listed in all contracts, AGENTS.md reconciled)**
    * Finalize:
      * `ARCHITECTURE.md`
      * `DECISIONS.md`

@@ -144,6 +144,8 @@ The following functional areas are **permanently out of scope**. Agents must rej
 *   **UI-defined behavior**: The UI is read-only. It never inputs data into the simulation. All inputs come from scenarios.
 *   **ISO-15118 PLC**: No low-level PLC timing or signal modulation.
 
+Explicitly forbidden agents: `pricing-agent`, `billing-agent`, `invoicing-agent`, `ledger-agent`, `user-agent`, `ocpi-agent`, `roaming-agent`, `settlement-agent`, `smart-gateway-agent`, `physics-agent`, `plc-agent`.
+
 ## 7.2 Operational Constraints
 
 Agents must NOT:
