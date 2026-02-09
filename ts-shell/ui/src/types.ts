@@ -32,3 +32,13 @@ export interface EvseStateRecord {
   active_transaction_id?: string;
   enforced_limit?: EnforcedLimit;
 }
+
+export type Direction = "inbound" | "outbound";
+
+export interface OcppTraceRecord {
+  tick: number;
+  timestamp: string;
+  direction: Direction;
+  action: string;
+  payload: any;
+}

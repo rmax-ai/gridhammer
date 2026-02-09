@@ -15,7 +15,8 @@ Do not parallelize across layers prematurely.
 - [ ] **Read-only UI (NOW)**
    - [x] Scaffold Vite app
    - [x] EVSE timelines
-   - [ ] Profile diffs
+   - [x] Profile diffs
+   - [ ] Power curves
 
 ## Next up (queued)
 
