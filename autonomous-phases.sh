@@ -64,11 +64,11 @@ run_phase "5" "TypeScript Shell v0" \
 run_phase "6" "Golden MCS Scenarios" \
   "Create golden heavy-duty MCS scenarios: peak arrival wave, ramp-rate stress, zero-power suspend, mid-session fault, site curtailment. Add explicit assertions. Ensure replay diffs are empty."
 
-run_phase "7" "Replay & Regression Hardening" \
-  "Add replay verification tooling and regression checks. Ensure identical artifacts across runs with same scenario hash and seed. Fail loudly on nondeterminism."
+run_phase "7" "Visualization (optional)" \
+  "Build optional read-only web UI consuming artifacts only. Visualize EVSE timelines, ChargingProfile diffs, and power curves. Implement diff view for Run vs Run and Before vs After CPMS change. No live hooks."
 
-run_phase "8" "Read-only Visualization" \
-  "Build optional read-only web UI consuming artifacts only. Visualize EVSE timelines, ChargingProfile diffs, and power curves. No live hooks."
+run_phase "8" "Live CPMS Integration (Interactive)" \
+  "Connect the deterministic core to real-world CPMS endpoints. Implement Gateway layer (WebSocket client, Async Runtime bridging), Real-time Clock Mode, and Interactive CLI ('live' command). Ensure protocol correctness in live mode."
 
 echo
 echo "======================================================"
