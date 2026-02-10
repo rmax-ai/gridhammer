@@ -41,8 +41,8 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
             });
             
             // Basic validation
-            if (record.tick !== undefined && record.evse_id !== undefined) {
-                powerRecords.push(record as PowerSeriesRecord);
+            if (record.tick !== undefined && record.evse_id !== undefined && record.timestamp !== undefined && record.power_w !== undefined) {
+                powerRecords.push(record as unknown as PowerSeriesRecord);
             }
         }
         

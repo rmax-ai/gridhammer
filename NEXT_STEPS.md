@@ -20,8 +20,10 @@ Do not parallelize across layers prematurely.
 
 ## Next up (queued)
 
-- [ ] **Diff view (NOW)**
-- [ ] **Update README.md**
+- [x] **Diff view (Done)**
+   * Run vs run
+   * Before vs after CPMS change
+- [ ] **Update README.md (NOW)**
 
 ---
 

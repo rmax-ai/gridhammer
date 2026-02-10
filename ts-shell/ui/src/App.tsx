@@ -4,68 +4,142 @@ import { ArtifactLoader } from './components/ArtifactLoader'
 import { EvseTimeline } from './components/EvseTimeline'
 import { ProfileViewer } from './components/ProfileViewer'
 import { PowerCurve } from './components/PowerCurve'
+import { DiffView } from './components/DiffView'
 import type { EvseStateRecord, OcppTraceRecord, PowerSeriesRecord } from './types'
 
-function App() {
-  const [evseData, setEvseData] = useState<EvseStateRecord[] | null>(null)
-  const [traceData, setTraceData] = useState<OcppTraceRecord[] | null>(null)
-  const [powerData, setPowerData] = useState<PowerSeriesRecord[] | null>(null)
+interface RunData {
+  evseData: EvseStateRecord[] | null;
+  traceData: OcppTraceRecord[] | null;
+  powerData: PowerSeriesRecord[] | null;
+}
 
-  const hasData = evseData || traceData || powerData;
+const emptyRun = (): RunData => ({
+  evseData: null,
+  traceData: null,
+  powerData: null,
+});
+
+function App() {
+  const [isDiffMode, setIsDiffMode] = useState(false);
+  
+  const [baseRun, setBaseRun] = useState<RunData>(emptyRun());
+  const [compRun, setCompRun] = useState<RunData>(emptyRun());
+
+  const hasBaseData = baseRun.evseData || baseRun.traceData || baseRun.powerData;
+  const hasCompData = compRun.evseData || compRun.traceData || compRun.powerData;
+
+  const reset = () => {
+    setBaseRun(emptyRun());
+    setCompRun(emptyRun());
+  };
 
   return (
     <div className="container">
       <header>
         <h1>GridHammer Visualization</h1>
+        <div style={{ margin: '10px 0' }}>
+            <label>
+                <input 
+                    type="checkbox" 
+                    checked={isDiffMode} 
+                    onChange={(e) => {
+                        setIsDiffMode(e.target.checked);
+                        reset();
+                    }} 
+                />
+                Diff Mode
+            </label>
+        </div>
       </header>
       
       <main>
-        {!hasData ? (
-          <ArtifactLoader 
-            onEvseDataLoaded={setEvseData}
-            onTraceDataLoaded={setTraceData}
-            onPowerDataLoaded={setPowerData}
-          />
+        {!isDiffMode ? (
+          !hasBaseData ? (
+            <ArtifactLoader 
+              onEvseDataLoaded={(d) => setBaseRun(prev => ({ ...prev, evseData: d }))}
+              onTraceDataLoaded={(d) => setBaseRun(prev => ({ ...prev, traceData: d }))}
+              onPowerDataLoaded={(d) => setBaseRun(prev => ({ ...prev, powerData: d }))}
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ padding: '10px' }}>
+                  <button onClick={reset} style={{ margin: '10px' }}>
+                    Load Another Run
+                  </button>
+                  <DataSummary run={baseRun} />
+              </div>
+
+              {baseRun.evseData && (
+                  <section>
+                      <EvseTimeline records={baseRun.evseData} />
+                  </section>
+              )}
+
+              {baseRun.powerData && (
+                  <section>
+                      <PowerCurve data={baseRun.powerData} />
+                  </section>
+              )}
+
+              {baseRun.traceData && (
+                  <section>
+                      <ProfileViewer traceData={baseRun.traceData} evseData={baseRun.evseData || []} />
+                  </section>
+              )}
+            </div>
+          )
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ padding: '10px' }}>
-                <button 
-                  onClick={() => { setEvseData(null); setTraceData(null); setPowerData(null); }} 
-                  style={{ margin: '10px' }}
-                >
-                  Load Another Run
-                </button>
-                <div style={{ fontSize: '0.9em', color: '#666' }}>
-                    Loaded: {evseData ? `EVSE States (${evseData.length})` : ''} 
-                    {evseData && (traceData || powerData) ? ' + ' : ''}
-                    {traceData ? `OCPP Trace (${traceData.length})` : ''}
-                    {(evseData || traceData) && powerData ? ' + ' : ''}
-                    {powerData ? `Power Series (${powerData.length})` : ''}
+            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                <div>
+                    <h3>Base Run</h3>
+                    <ArtifactLoader 
+                        onEvseDataLoaded={(d) => setBaseRun(prev => ({ ...prev, evseData: d }))}
+                        onTraceDataLoaded={(d) => setBaseRun(prev => ({ ...prev, traceData: d }))}
+                        onPowerDataLoaded={(d) => setBaseRun(prev => ({ ...prev, powerData: d }))}
+                    />
+                    <DataSummary run={baseRun} />
+                </div>
+                <div>
+                    <h3>Comparison Run</h3>
+                    <ArtifactLoader 
+                        onEvseDataLoaded={(d) => setCompRun(prev => ({ ...prev, evseData: d }))}
+                        onTraceDataLoaded={(d) => setCompRun(prev => ({ ...prev, traceData: d }))}
+                        onPowerDataLoaded={(d) => setCompRun(prev => ({ ...prev, powerData: d }))}
+                    />
+                    <DataSummary run={compRun} />
                 </div>
             </div>
-
-            {evseData && (
-                <section>
-                    <EvseTimeline records={evseData} />
-                </section>
+            
+            {(hasBaseData || hasCompData) && (
+                <button onClick={reset} style={{ alignSelf: 'center' }}>Reset Both</button>
             )}
 
-            {powerData && (
-                <section>
-                    <PowerCurve data={powerData} />
-                </section>
-            )}
-
-            {traceData && (
-                <section>
-                    <ProfileViewer traceData={traceData} evseData={evseData || []} />
-                </section>
+            {hasBaseData && hasCompData && (
+                <DiffView 
+                    base={{ ...baseRun, label: 'Base' }} 
+                    comparison={{ ...compRun, label: 'Comp' }} 
+                />
             )}
           </div>
         )}
       </main>
     </div>
   )
+}
+
+function DataSummary({ run }: { run: RunData }) {
+    const { evseData, traceData, powerData } = run;
+    if (!evseData && !traceData && !powerData) return null;
+    return (
+        <div style={{ fontSize: '0.8em', color: '#666' }}>
+            {evseData ? `EVSE States (${evseData.length})` : ''} 
+            {evseData && (traceData || powerData) ? ' + ' : ''}
+            {traceData ? `OCPP Trace (${traceData.length})` : ''}
+            {(evseData || traceData) && powerData ? ' + ' : ''}
+            {powerData ? `Power Series (${powerData.length})` : ''}
+        </div>
+    );
 }
 
 export default App
