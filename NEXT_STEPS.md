@@ -249,6 +249,32 @@ No live simulation hooks.
 
 ---
 
+## Phase 8 — Live CPMS Integration (Interactive)
+
+**Goal:** Connect the deterministic core to real-world CPMS endpoints.
+
+- [ ] **Gateway layer implementation**
+   * WebSocket client (tokio-tungstenite)
+   * Async Runtime bridging (tokio <-> sync core)
+   * Message serialization/deserialization
+
+- [ ] **Real-time Clock Mode**
+   * Wall-clock driver for the simulation loop
+   * Heartbeat generation (real-time interval)
+
+- [ ] **Interactive CLI (`live` command)**
+   * Connect to CPMS URL
+   * Session control (Start/Stop transaction)
+   * Fault injection triggers
+   * "Human-in-the-loop" event injection
+
+**Exit criteria**
+* Successful `BootNotification` and `Heartbeat` loop with a live CPMS
+* User can manually trigger a charging session via CLI
+* Protocol correctness maintained in live mode
+
+---
+
 ## Anti-goals (do not start early)
 
 * Web UI before core invariants
