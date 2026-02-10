@@ -1,9 +1,11 @@
 import React from 'react';
-import type { EvseStateRecord, PowerSeriesRecord, EvseState } from '../types';
+import type { EvseStateRecord, PowerSeriesRecord, EvseState, OcppTraceRecord } from '../types';
+import { ChargingProfileDiff } from './ChargingProfileDiff';
 
 interface RunData {
   evseData: EvseStateRecord[] | null;
   powerData: PowerSeriesRecord[] | null;
+  traceData: OcppTraceRecord[] | null;
   label: string;
 }
 
@@ -41,6 +43,14 @@ export const DiffView: React.FC<Props> = ({ base, comparison }) => {
         <EvseTimelineDiff 
           baseData={base.evseData || []} 
           compData={comparison.evseData || []} 
+          baseLabel={base.label}
+          compLabel={comparison.label}
+        />
+      )}
+      {(base.traceData || comparison.traceData) && (
+        <ChargingProfileDiff 
+          baseTrace={base.traceData || []} 
+          compTrace={comparison.traceData || []} 
           baseLabel={base.label}
           compLabel={comparison.label}
         />

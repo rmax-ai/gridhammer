@@ -12,18 +12,15 @@ Do not parallelize across layers prematurely.
 
 ## Current task in progress
 
-- [x] **Read-only UI (Done)**
-   - [x] Scaffold Vite app
-   - [x] EVSE timelines
-   - [x] Profile diffs
-   - [x] Power curves
+- [ ] **Gateway layer implementation**
+   - [ ] WebSocket client (tokio-tungstenite)
+   - [ ] Async Runtime bridging (tokio <-> sync core)
+   - [ ] Message serialization/deserialization
 
 ## Next up (queued)
 
-- [x] **Diff view (Done)**
-   * Run vs run
-   * Before vs after CPMS change
-- [x] **Update README.md (Done)**
+- [ ] **Real-time Clock Mode**
+- [ ] **Interactive CLI (`live` command)**
 
 ---
 
@@ -230,16 +227,16 @@ Do not parallelize across layers prematurely.
 
 ---
 
-## Phase 7 — Visualization (optional)
+## Phase 7 — Visualization (optional) (Done)
 
 **Goal:** Human insight without semantic power.
 
-- [ ] **Read-only UI**
+- [x] **Read-only UI (Done)**
    * EVSE timelines
    * Profile diffs
    * Power curves
 
-- [ ] **Diff view**
+- [x] **Diff view (Done)**
    * Run vs run
    * Before vs after CPMS change
 
