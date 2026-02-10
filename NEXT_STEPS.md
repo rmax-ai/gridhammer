@@ -23,7 +23,7 @@ Do not parallelize across layers prematurely.
 - [x] **Diff view (Done)**
    * Run vs run
    * Before vs after CPMS change
-- [ ] **Update README.md (NOW)**
+- [x] **Update README.md (Done)**
 
 ---
 
