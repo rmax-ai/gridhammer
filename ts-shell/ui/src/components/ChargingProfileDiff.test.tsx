@@ -47,7 +47,7 @@ describe('ChargingProfileDiff', () => {
     const p1 = createProfile(100, 1, 'TxProfile', 50000);
     const p2 = createProfile(100, 1, 'TxProfile', 60000); // Changed limit
     render(<ChargingProfileDiff baseTrace={[p1]} compTrace={[p2]} baseLabel="Base" compLabel="Comp" />);
-    expect(screen.getByText('Modified')).toBeInTheDocument();
+    expect(screen.getByText('Modified Profiles')).toBeInTheDocument();
     expect(screen.getByText('Tick 100 (ID 1)')).toBeInTheDocument();
     // Should see both values
     expect(screen.getByText(/50000/)).toBeInTheDocument();
@@ -58,11 +58,11 @@ describe('ChargingProfileDiff', () => {
     const p1 = createProfile(100, 1, 'TxProfile', 50000);
     render(<ChargingProfileDiff baseTrace={[p1]} compTrace={[p1]} baseLabel="Base" compLabel="Comp" />);
     
-    expect(screen.queryByText('T100:ID1')).not.toBeInTheDocument();
+    expect(screen.queryByText(/T100: ID1/)).not.toBeInTheDocument();
     
     const checkbox = screen.getByLabelText(/Show Unchanged/);
     fireEvent.click(checkbox);
     
-    expect(screen.getByText('T100:ID1')).toBeInTheDocument();
+    expect(screen.getByText(/T100: ID1/)).toBeInTheDocument();
   });
 });

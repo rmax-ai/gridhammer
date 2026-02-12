@@ -82,7 +82,7 @@ export const ChargingProfileDiff: React.FC<Props> = ({ baseTrace, compTrace, bas
     }, [baseProfiles, compProfiles]);
 
     const renderProfile = (p: ProfileRecord) => (
-        <pre style={{ fontSize: '0.8em', background: '#f5f5f5', padding: '5px', borderRadius: '4px', overflowX: 'auto' }}>
+        <pre style={{ fontSize: '0.75em', background: '#f8fafc', padding: '10px', borderRadius: '4px', overflowX: 'auto', border: '1px solid #e2e8f0', margin: '5px 0' }}>
             {JSON.stringify(p.profile, null, 2)}
         </pre>
     );
@@ -90,76 +90,76 @@ export const ChargingProfileDiff: React.FC<Props> = ({ baseTrace, compTrace, bas
     const hasDiff = diff.added.length > 0 || diff.removed.length > 0 || diff.modified.length > 0;
 
     return (
-        <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px', width: '1000px' }}>
-            <h2>Charging Profile Diff</h2>
+        <div className="profile-diff-container">
+            <h3 style={{ marginBottom: '20px' }}>Charging Profile Diff</h3>
             
-            {!hasDiff && <p>No differences in charging profiles found.</p>}
+            {!hasDiff && <p style={{ color: '#64748b' }}>No differences in charging profiles found.</p>}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {diff.removed.length > 0 && (
-                    <section>
-                        <h3 style={{ color: '#d32f2f' }}>Removed in {compLabel}</h3>
+                    <div className="diff-group">
+                        <h4 style={{ color: '#ef4444', fontSize: '14px', marginBottom: '10px' }}>Removed in {compLabel}</h4>
                         {diff.removed.map(p => (
-                            <div key={`${p.tick}-${p.id}`} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ffcdd2', backgroundColor: '#ffebee', borderRadius: '4px' }}>
-                                <strong>Tick {p.tick} (ID {p.id})</strong>
+                            <div key={`${p.tick}-${p.id}`} style={{ marginBottom: '10px', padding: '12px', borderLeft: '4px solid #ef4444', backgroundColor: '#fef2f2', borderRadius: '4px' }}>
+                                <div style={{ fontSize: '13px', fontWeight: 600 }}>Tick {p.tick} (ID {p.id})</div>
                                 {renderProfile(p)}
                             </div>
                         ))}
-                    </section>
+                    </div>
                 )}
 
                 {diff.added.length > 0 && (
-                    <section>
-                        <h3 style={{ color: '#388e3c' }}>Added in {compLabel}</h3>
+                    <div className="diff-group">
+                        <h4 style={{ color: '#10b981', fontSize: '14px', marginBottom: '10px' }}>Added in {compLabel}</h4>
                         {diff.added.map(p => (
-                            <div key={`${p.tick}-${p.id}`} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #c8e6c9', backgroundColor: '#e8f5e9', borderRadius: '4px' }}>
-                                <strong>Tick {p.tick} (ID {p.id})</strong>
+                            <div key={`${p.tick}-${p.id}`} style={{ marginBottom: '10px', padding: '12px', borderLeft: '4px solid #10b981', backgroundColor: '#ecfdf5', borderRadius: '4px' }}>
+                                <div style={{ fontSize: '13px', fontWeight: 600 }}>Tick {p.tick} (ID {p.id})</div>
                                 {renderProfile(p)}
                             </div>
                         ))}
-                    </section>
+                    </div>
                 )}
 
                 {diff.modified.length > 0 && (
-                    <section>
-                        <h3 style={{ color: '#f57c00' }}>Modified</h3>
+                    <div className="diff-group">
+                        <h4 style={{ color: '#f59e0b', fontSize: '14px', marginBottom: '10px' }}>Modified Profiles</h4>
                         {diff.modified.map(({ base, comp }) => (
-                            <div key={`${base.tick}-${base.id}`} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ffe0b2', backgroundColor: '#fff3e0', borderRadius: '4px' }}>
-                                <strong>Tick {base.tick} (ID {base.id})</strong>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <div style={{ flex: 1 }}>
-                                        <h4 style={{ margin: '5px 0' }}>{baseLabel}</h4>
+                            <div key={`${base.tick}-${base.id}`} style={{ marginBottom: '15px', padding: '12px', borderLeft: '4px solid #f59e0b', backgroundColor: '#fffbeb', borderRadius: '4px' }}>
+                                <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '10px' }}>Tick {base.tick} (ID {base.id})</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#92400e', marginBottom: '4px' }}>{baseLabel}</div>
                                         {renderProfile(base)}
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <h4 style={{ margin: '5px 0' }}>{compLabel}</h4>
+                                    <div>
+                                        <div style={{ fontSize: '11px', fontWeight: 600, color: '#92400e', marginBottom: '4px' }}>{compLabel}</div>
                                         {renderProfile(comp)}
                                     </div>
                                 </div>
                             </div>
                         ))}
-                    </section>
+                    </div>
                 )}
 
-                <section>
-                    <label style={{ fontSize: '0.9em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                    <label style={{ fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b' }}>
                         <input 
                             type="checkbox" 
                             checked={showUnchanged} 
                             onChange={e => setShowUnchanged(e.target.checked)} 
                         />
-                        Show Unchanged ({diff.unchanged.length})
+                        Show Unchanged Profiles ({diff.unchanged.length})
                     </label>
                     {showUnchanged && diff.unchanged.length > 0 && (
-                        <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                        <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                             {diff.unchanged.map(p => (
-                                <div key={`${p.tick}-${p.id}`} style={{ padding: '2px 5px', fontSize: '0.8em', color: '#666', border: '1px solid #eee' }}>
-                                    T{p.tick}:ID{p.id}
+                                <div key={`${p.tick}-${p.id}`} style={{ padding: '4px 8px', fontSize: '11px', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc' }}>
+                                    T{p.tick}: ID{p.id}
                                 </div>
                             ))}
                         </div>
                     )}
-                </section>
+                </div>
             </div>
         </div>
     );

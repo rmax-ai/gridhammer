@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { EvseStateRecord, OcppTraceRecord, PowerSeriesRecord } from '../types';
 
 interface Props {
@@ -8,10 +8,10 @@ interface Props {
 }
 
 export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataLoaded, onPowerDataLoaded }) => {
-  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const [isDragging, setIsDragging] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  const processFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
@@ -24,85 +24,101 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
       const isPower = file.name.includes('power_series');
 
       if (isPower || file.name.endsWith('.csv')) {
-        // CSV Parsing
         const header = lines[0].split(',').map(h => h.trim());
         const powerRecords: PowerSeriesRecord[] = [];
         
         for (let i = 1; i < lines.length; i++) {
             const values = lines[i].split(',');
-            const record: Record<string, string | number | undefined> = {};
+            const record: any = {};
             header.forEach((h, idx) => {
                 const val = values[idx]?.trim();
-                if (h === 'tick' || h === 'evse_id' || h === 'power_w' || h === 'limit_w') {
+                if (['tick', 'evse_id', 'power_w', 'limit_w'].includes(h)) {
                     record[h] = val ? Number(val) : undefined;
                 } else {
                     record[h] = val;
                 }
             });
-            
-            // Basic validation
-            if (record.tick !== undefined && record.evse_id !== undefined && record.timestamp !== undefined && record.power_w !== undefined) {
-                powerRecords.push(record as unknown as PowerSeriesRecord);
+            if (record.tick !== undefined && record.evse_id !== undefined) {
+                powerRecords.push(record as PowerSeriesRecord);
             }
         }
-        
-        if (powerRecords.length > 0) {
-            onPowerDataLoaded(powerRecords);
-        }
+        if (powerRecords.length > 0) onPowerDataLoaded(powerRecords);
         return;
       }
 
-      // JSONL Parsing
       const evseRecords: EvseStateRecord[] = [];
       const traceRecords: OcppTraceRecord[] = [];
 
       for (const line of lines) {
-        if (line.trim()) {
-          try {
+        try {
             const json = JSON.parse(line);
-            if (isEvse) {
+            if (isEvse || ('state' in json && 'evse_id' in json)) {
                 evseRecords.push(json as EvseStateRecord);
-            } else if (isTrace) {
+            } else if (isTrace || ('action' in json && 'direction' in json)) {
                 traceRecords.push(json as OcppTraceRecord);
-            } else {
-                // Fallback sniffing based on fields
-                if ('state' in json && 'evse_id' in json) {
-                    evseRecords.push(json as EvseStateRecord);
-                } else if ('action' in json && 'direction' in json) {
-                    traceRecords.push(json as OcppTraceRecord);
-                }
             }
-          } catch (err) {
-            console.error('Failed to parse line:', line, err);
-          }
-        }
+        } catch (err) {}
       }
 
-      if (evseRecords.length > 0) {
-        onEvseDataLoaded(evseRecords);
-      }
-      if (traceRecords.length > 0) {
-        onTraceDataLoaded(traceRecords);
-      }
+      if (evseRecords.length > 0) onEvseDataLoaded(evseRecords);
+      if (traceRecords.length > 0) onTraceDataLoaded(traceRecords);
     };
     reader.readAsText(file);
-  }, [onEvseDataLoaded, onTraceDataLoaded, onPowerDataLoaded]);
+  };
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+    setLoading(true);
+    Array.from(files).forEach(processFile);
+    setLoading(false);
+  };
+
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const onDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFiles(e.dataTransfer.files);
+  }, []);
 
   return (
-    <div style={{ 
-      border: '2px dashed #ccc', 
-      padding: '20px', 
-      textAlign: 'center', 
-      margin: '20px',
-      borderRadius: '8px'
-    }}>
-      <h3>Upload Artifacts</h3>
-      <p>Upload <code>evse_states.jsonl</code>, <code>ocpp_trace.jsonl</code>, or <code>power_series.csv</code></p>
+    <div 
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      style={{ 
+        border: `2px dashed ${isDragging ? '#2563eb' : '#cbd5e1'}`, 
+        padding: '40px 20px', 
+        textAlign: 'center', 
+        borderRadius: '12px',
+        backgroundColor: isDragging ? '#eff6ff' : '#f8fafc',
+        transition: 'all 0.2s',
+        cursor: 'pointer'
+      }}
+      onClick={() => document.getElementById('fileInput')?.click()}
+    >
       <input 
+        id="fileInput"
         type="file" 
+        multiple
         accept=".jsonl,.csv" 
-        onChange={handleFileChange} 
+        style={{ display: 'none' }}
+        onChange={(e) => handleFiles(e.target.files)} 
       />
+      <div style={{ fontSize: '40px', marginBottom: '10px' }}>📦</div>
+      <h3 style={{ margin: '0 0 10px 0' }}>{loading ? 'Processing...' : 'Drop artifacts here'}</h3>
+      <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
+        Select or drop <code>evse_states.jsonl</code>, <code>ocpp_trace.jsonl</code>, or <code>power_series.csv</code>
+      </p>
+      <button className="primary" style={{ marginTop: '20px' }}>Select Files</button>
     </div>
   );
 };
