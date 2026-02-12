@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ChargingProfileDiff } from './ChargingProfileDiff';
 import type { OcppTraceRecord } from '../types';

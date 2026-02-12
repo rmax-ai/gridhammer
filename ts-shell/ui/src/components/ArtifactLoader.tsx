@@ -11,7 +11,7 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const processFile = (file: File) => {
+  const processFile = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
@@ -29,7 +29,7 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
         
         for (let i = 1; i < lines.length; i++) {
             const values = lines[i].split(',');
-            const record: any = {};
+            const record: Record<string, string | number | undefined> = {};
             header.forEach((h, idx) => {
                 const val = values[idx]?.trim();
                 if (['tick', 'evse_id', 'power_w', 'limit_w'].includes(h)) {
@@ -39,7 +39,7 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
                 }
             });
             if (record.tick !== undefined && record.evse_id !== undefined) {
-                powerRecords.push(record as PowerSeriesRecord);
+                powerRecords.push(record as unknown as PowerSeriesRecord);
             }
         }
         if (powerRecords.length > 0) onPowerDataLoaded(powerRecords);
@@ -57,21 +57,23 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
             } else if (isTrace || ('action' in json && 'direction' in json)) {
                 traceRecords.push(json as OcppTraceRecord);
             }
-        } catch (err) {}
+        } catch {
+            // ignore
+        }
       }
 
       if (evseRecords.length > 0) onEvseDataLoaded(evseRecords);
       if (traceRecords.length > 0) onTraceDataLoaded(traceRecords);
     };
     reader.readAsText(file);
-  };
+  }, [onEvseDataLoaded, onTraceDataLoaded, onPowerDataLoaded]);
 
-  const handleFiles = (files: FileList | null) => {
+  const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
     setLoading(true);
     Array.from(files).forEach(processFile);
     setLoading(false);
-  };
+  }, [processFile]);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -87,7 +89,7 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
     e.preventDefault();
     setIsDragging(false);
     handleFiles(e.dataTransfer.files);
-  }, []);
+  }, [handleFiles]);
 
   return (
     <div 
