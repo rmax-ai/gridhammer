@@ -29,7 +29,8 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
         
         for (let i = 1; i < lines.length; i++) {
             const values = lines[i].split(',');
-            const record: Record<string, string | number | undefined> = {};
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const record: any = {};
             header.forEach((h, idx) => {
                 const val = values[idx]?.trim();
                 if (['tick', 'evse_id', 'power_w', 'limit_w'].includes(h)) {
@@ -57,8 +58,8 @@ export const ArtifactLoader: React.FC<Props> = ({ onEvseDataLoaded, onTraceDataL
             } else if (isTrace || ('action' in json && 'direction' in json)) {
                 traceRecords.push(json as OcppTraceRecord);
             }
-        } catch {
-            // ignore
+        } catch (error) {
+            console.warn('Skipping invalid JSON line', error);
         }
       }
 
